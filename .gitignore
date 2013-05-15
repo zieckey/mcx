@@ -1,0 +1,3 @@
+*.swp
+3rdparty/muduo/
+3rdparty/rapidjson/
