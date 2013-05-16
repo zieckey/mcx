@@ -15,35 +15,31 @@ CFLAGS=$(TOP_CFLAGS) -c -fPIC \
 	   -I ../3rdparty/muduo \
 	   -MMD
 CPPFLAGS=$(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords 
-LDFLAGS=-L/usr/local/lib ../src/libmcxmemcached.a ../3rdparty/build/debug/lib/libmuduo_net.a ../3rdparty/build/debug/lib/libmuduo_base.a -lpthread 
+LDFLAGS=-L/usr/local/lib ../src/libmcx.a ../3rdparty/build/debug/lib/libmuduo_net.a ../3rdparty/build/debug/lib/libmuduo_base.a -lpthread 
 
 SRCS := $(wildcard *.cc)
-OBJS := $(patsubst %.cc, %.o, $(SRCS))
-DEPS := $(patsubst %.o, %.d, $(OBJS))
+OBJS := $(patsubst %.cc, .obj/%.o, $(SRCS))
+DEPS := $(patsubst .obj/%.o, .obj/%.d, $(OBJS))
 
 TARGET=mcx
 
-all : $(TARGET) 
+all : prepare $(TARGET) 
 	$(MAKE) install
 
 check : $(TARGET)
 	./$^
 
 $(TARGET) : $(OBJS)
+	$(MAKE) -C ../src
 	$(CXX) $(OBJS) $(LDFLAGS) -o $@
 
 -include $(DEPS)
 
-%.o : %.cc
+.obj/%.o : %.cc
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
-t:
-	@echo "DIRNAME:" $(DIRNAME)
-	@echo "PARENT_DIRNAME:" $(PARENT_DIRNAME)
-	@echo "SRCS:" $(SRCS)
-	@echo "OBJS:" $(OBJS)
-	@echo "CFLAGS:" $(CFLAGS)
-	@echo "CPPFLAGS:" $(CPPFLAGS)
+prepare : 
+	@mkdir -p .obj
 
 install: $(TARGET) 
 #	cp -f $(TARGET) $(PREFIX)/bin

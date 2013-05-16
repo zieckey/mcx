@@ -3,5 +3,7 @@
 3rdparty/rapidjson/
 3rdparty/build/
 src/.obj/
-src/libmcxmemcached.a
-src/libmcxmemcached.so
+src/libmcx.a
+src/libmcx.so
+test/mcx
+test/.obj

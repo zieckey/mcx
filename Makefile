@@ -3,6 +3,9 @@
 all : prepare
 	$(MAKE) -C src
 
+test : prepare
+	$(MAKE) -C src
+	$(MAKE) -C test
 
 prepare:
 	@test -d 3rdparty/rapidjson || svn checkout http://rapidjson.googlecode.com/svn/trunk/ 3rdparty/rapidjson
