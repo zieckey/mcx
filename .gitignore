@@ -2,3 +2,6 @@
 3rdparty/muduo/
 3rdparty/rapidjson/
 3rdparty/build/
+src/.obj/
+src/libmcxmemcached.a
+src/libmcxmemcached.so

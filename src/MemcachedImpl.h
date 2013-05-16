@@ -2,22 +2,48 @@
 #ifndef XASYNC_MEMCACHED_IMPL_H
 #define XASYNC_MEMCACHED_IMPL_H
 
+#include "Memcached.h"
+
+#include <stdio.h>
+
+#include <boost/bind.hpp>
+
+#include <muduo/base/Logging.h>
+
+#include <muduo/net/EventLoop.h>
+#include <muduo/net/TcpClient.h>
+#include <muduo/net/InetAddress.h>
+
 namespace mcx 
 {
 
-class MemcachedImpl : public boost::noncopyable
+using namespace muduo;
+using namespace muduo::net;
+
+class Memcached::Impl 
 {
 public:
-    MemcachedImpl(const std::string& host, int port) {
+    Impl(const std::string& host, int port) 
         : loop_(NULL), host_(host), port_(port)
-    }
+    {}
 
-    ~MemcachedImpl() {}
+    ~Impl() {}
 
-    bool initialize(muduo::net::EventLoop* loop) {
+    bool initialize(EventLoop* loop) {
         loop_ = loop;
         assert(loop_);
-        //TODO set callback
+
+        InetAddress addr(host_, static_cast<uint16_t>(port_));
+        tcp_client_.reset(new TcpClient(
+                        loop, addr, "mcx-memcached-client"));
+
+        tcp_client_->setConnectionCallback(
+                    boost::bind(&Impl::onConnection, this, _1));
+        tcp_client_->setMessageCallback(
+                    boost::bind(&Impl::onMessage, this, _1, _2, _3));
+
+        tcp_client_->connect();
+
         return true;
     }
 
@@ -34,6 +60,10 @@ public:
     void get(const std::string& key,
              const GetCallback& cb)
     {
+        char buf[1024] = {};
+        snprintf(buf, sizeof(buf), "get %s\r\n", key.data());
+        tcp_client_->connection()->send(buf, strlen(buf));
+        LOG_TRACE << "request get key=[" << key << "]";
     }
 
     void mget(const std::vector<std::string>& keys,
@@ -41,13 +71,41 @@ public:
     {
     }
 
-private:
-
 
 private:
-    muduo::net::EventLoop*  loop_;
+    void onConnection(const TcpConnectionPtr& conn)
+    {
+        LOG_TRACE << conn->localAddress().toIpPort() << " -> "
+            << conn->peerAddress().toIpPort() << " is "
+            << (conn->connected() ? "UP" : "DOWN");
+
+        if (conn->connected())
+        {
+            conn->setTcpNoDelay(true);
+        }
+        else
+        {
+        }
+    }
+
+    void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time)
+    {
+        LOG_TRACE << "recv from "
+            << conn->peerAddress().toIpPort() 
+            << "[" << buf->retrieveAllAsString() << "]";
+    }
+
+
+
+private:
+    typedef boost::shared_ptr<TcpClient> TcpClientPtr;
+private:
+
+    EventLoop*  loop_;
     std::string             host_;
     int                     port_;
+
+    TcpClientPtr            tcp_client_;
 };
 
 }

@@ -16,7 +16,7 @@ CFLAGS=$(TOP_CFLAGS) -g -c -fPIC \
 	   -I/usr/local/include  -MMD
 CPPFLAGS= $(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords
 LDFLAGS=$(TOP_LDFLAGS) -L/usr/local/lib -lpthread 
-LIBNAME=qoslib
+LIBNAME=mcxmemcached
 
 SRCS := $(wildcard *.cc)
 OBJS := $(patsubst %.cc, .obj/%.o, $(SRCS)) 

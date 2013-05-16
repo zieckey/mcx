@@ -1,6 +1,7 @@
 
 
 all : prepare
+	$(MAKE) -C src
 
 
 prepare:
