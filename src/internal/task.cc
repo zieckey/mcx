@@ -55,6 +55,13 @@ void StoreTask::run(MemcachedConnection* m) {
     writeToFile("/tmp/set.bin", s.data(), s.size());
 }
 
+
+
+void StoreTask::report(const Status& status)
+{
+    handler_(key_, status);
+}
+
 //TaskResult* RemoveTask::run(struct memcached_st* m) {
 //    uint32_t expire = 0;
 //	memcached_return_t ret =

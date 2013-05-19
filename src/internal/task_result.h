@@ -2,74 +2,75 @@
 #ifndef ASMC_MT_RESULT_H_
 #define ASMC_MT_RESULT_H_
 
-#include "mt_actions.h"
+#include "tasks.h"
 
-namespace asmc {
+namespace mcx {
+namespace detail {
 
 class TaskResult {
 public:
     virtual ~TaskResult() {}
-    virtual void Report() = 0;
+    virtual void report() = 0;
 };
 
-class MtPutResult : public TaskResult {
+class StoreTaskResult : public TaskResult {
 public:
-    MtPutResult(StoreTask* action, const Error& error)
-        : action_(action), error_(error) {}
-    ~MtPutResult() { delete action_; }
+    StoreTaskResult(StoreTask* task, const Status& status)
+        : task_(task), status_(status) {}
 
-    virtual void Report() {
-        action_->handler()(action_->key(), error_);
+    virtual void report() {
+        task_->handler()(task_->key(), status_);
     }
 private:
-    StoreTask *action_;
-    Error error_;
+    StoreTask *task_;
+    Status status_;
 };
 
-class MtDelResult : public TaskResult {
-public:
-    MtDelResult(RemoveTask* action, const Error& error)
-        : action_(action), error_(error) {}
-    ~MtDelResult() { delete action_; }
+//class MtDelResult : public TaskResult {
+//public:
+//    MtDelResult(RemoveTask* task, const Status& status)
+//        : task_(task), status_(status) {}
+//    ~MtDelResult() { delete task_; }
+//
+//    virtual void report() {
+//        task_->handler()(task_->key(), status_);
+//    }
+//private:
+//    RemoveTask *task_;
+//    Status status_;
+//};
+//
+//class MtGetResult : public TaskResult {
+//public:
+//    MtGetResult(GetTask* task, const GetResult& result)
+//        : task_(task), result_(result) {}
+//    ~MtGetResult() { delete task_; }
+//
+//    virtual void report() {
+//        task_->handler()(task_->key(), result_);
+//    }
+//private:
+//    GetTask *task_;
+//    GetResult result_;
+//};
+//
+//class MtMultiGetResult : public TaskResult {
+//public:
+//    MtMultiGetResult(MultiGetTask* task,
+//                     std::map<std::string, GetResult>* results)
+//        : task_(task), results_(results) {}
+//    ~MtMultiGetResult() { delete task_; }
+//
+//    virtual void report() {
+//        task_->handler()(*results_);
+//    }
+//private:
+//    MultiGetTask *task_;
+//    std::map<std::string, GetResult>* results_;
+//};
 
-    virtual void Report() {
-        action_->handler()(action_->key(), error_);
-    }
-private:
-    RemoveTask *action_;
-    Error error_;
-};
-
-class MtGetResult : public TaskResult {
-public:
-    MtGetResult(GetTask* action, const GetResult& result)
-        : action_(action), result_(result) {}
-    ~MtGetResult() { delete action_; }
-
-    virtual void Report() {
-        action_->handler()(action_->key(), result_);
-    }
-private:
-    GetTask *action_;
-    GetResult result_;
-};
-
-class MtMultiGetResult : public TaskResult {
-public:
-    MtMultiGetResult(MultiGetTask* action,
-                     std::map<std::string, GetResult>* results)
-        : action_(action), results_(results) {}
-    ~MtMultiGetResult() { delete action_; }
-
-    virtual void Report() {
-        action_->handler()(*results_);
-    }
-private:
-    MultiGetTask *action_;
-    std::map<std::string, GetResult>* results_;
-};
-
-} // namespace asmc
+} // namespace detail
+} // namespace mcx 
 
 
 #endif // ASMC_MT_RESULT_H_

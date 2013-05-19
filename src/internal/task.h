@@ -22,6 +22,9 @@ public:
 
     virtual ~Task();
     virtual void run(MemcachedConnection* m) = 0;
+
+    //virtual void report() = 0;
+
 private:
     uint32_t id_;
 };
@@ -35,6 +38,8 @@ public:
               uint16_t vbucket_id, const StoreCallback& handler);
 
     virtual void run(MemcachedConnection* m);
+
+    void report(const Status& status);
 
     const std::string&   key() const { return key_; }
     const StoreCallback& handler() const { return handler_; }

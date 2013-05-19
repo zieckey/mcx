@@ -1,4 +1,5 @@
 #include <mcx/memcached.h>
+#include <muduo/base/Logging.h>
 #include <muduo/net/EventLoop.h>
 #include <boost/bind.hpp>
 #include <stdio.h>
@@ -18,9 +19,7 @@ void onGetDone(const std::string& key, const GetResult& result)
 
 void onStoreDone(const std::string& key, const Status& status)
 {
-    printf("Key=[%s] status=[%s]\n", 
-                key.data(), 
-                status.toString().data());
+    LOG_INFO << "Key=[" << key << "] status=[" << status.toString() << "]";
 }
 
 void request(Memcached* m)

@@ -7,7 +7,7 @@ ARFLAGS=cru
 CURRENT_DIR=$(shell echo `pwd`)
 PARENT_DIRNAME=$(shell basename $(shell dirname $(CURRENT_DIR)))
 SOURCE_DIR=$(CURRENT_DIR)
-CFLAGS=$(TOP_CFLAGS) -c -fPIC \
+CFLAGS=$(TOP_CFLAGS) -g -c -fPIC \
 	   -Wshadow -Wcast-qual -Wcast-align \
 	   -Wwrite-strings -Wsign-compare \
 	   -Winvalid-pch -fms-extensions -Wall \

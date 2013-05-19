@@ -6,6 +6,7 @@
 #include <muduo/net/TcpClient.h>
 #include <muduo/net/EventLoop.h>
 
+#include "../memcached.h"
 
 namespace mcx
 {
@@ -17,12 +18,15 @@ using namespace muduo::net;
 
 class Task;
 
+class BinaryCodec;
+
 typedef boost::shared_ptr<Task> TaskPtr;
 
 class MemcachedConnection
 {
 public:    
-    typedef boost::shared_ptr<TcpClient> TcpClientPtr;
+    typedef boost::shared_ptr<TcpClient>   TcpClientPtr;
+    typedef boost::shared_ptr<BinaryCodec> BinaryCodecPtr;
     typedef std::map<uint32_t /*task_id*/, TaskPtr> TaskPtrMap;
 
 public:    
@@ -42,12 +46,12 @@ public:
     TcpClientPtr& tcp_client() {
         return tcp_client_;
     }
+
+    void onStoreTaskDone(int task_id, const Status& status);
  
 private:
     void onConnection(const TcpConnectionPtr& conn);
     void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time);
-
-
 
 private:
     EventLoop*      loop_;
@@ -57,7 +61,9 @@ private:
     std::string     host_;
     int             port_;
 
-    TaskPtrMap      runing_tasks_;
+    TaskPtrMap      running_tasks_;
+
+    BinaryCodecPtr  codec_;
 };
 typedef boost::shared_ptr<MemcachedConnection> MemcachedConnectionPtr;
 

@@ -1,7 +1,7 @@
-
 #ifndef LIBMEMCACHED_MCX_STATUS_H__
 #define LIBMEMCACHED_MCX_STATUS_H__
 
+#include <stdio.h>
 #include <string>
 
 namespace mcx {
@@ -17,14 +17,15 @@ public:
         kUnknown,
     };
 
-    Status() : code_(kOK) { }
-    Status(Code ec) : code_(ec) { }
+    Status() : code_(kOK), memcached_response_code_(0) { }
+    Status(Code ec, int mc_code) 
+        : code_(ec), memcached_response_code_(mc_code) { }
 
     bool operator !() const {
         return code_ != kOK;
     }
 
-    bool ok() const             { return code_ == kOK;           }
+    bool ok() const             { return code_ == kOK;          }
     bool isNotFound() const     { return code_ == kNotFound;    }
     bool isTimedOut() const     { return code_ == kTimeout;     }
     bool isNetworkError() const { return code_ == kNetworkError;}
@@ -34,19 +35,25 @@ public:
 
     std::string toString() const {
         static std::string error_message[] = {
-            "ok",
-            "not found",
-            "time out",
-            "network error",
-            "invalid argument",
-            "unknown error",
+            "OK",
+            "NOT FOUND",
+            "TIMEOUT",
+            "NETWORK ERROR",
+            "INVALID ARGUMENT",
+            "UNKNOWN ERROR",
         };
         assert(code_ >= 0 && code_ < kUnknown);
-        return error_message[code_];
+        std::string e = error_message[code_];
+        char buf[64] = {};
+        snprintf(buf, sizeof(buf), " , memcached response code=%d", 
+                    memcached_response_code_);
+        e += buf;
+        return e;
     }
 
 private:
-    Code        code_;
+    Code code_;
+    int  memcached_response_code_;
 };
 
 } // namespace symc

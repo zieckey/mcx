@@ -11,14 +11,14 @@
 
 #include <memcached/protocol_binary.h>
 
-#include "memcached.h"
-
 namespace mcx {
+
+namespace detail {
 
 class BinaryCodec : boost::noncopyable
 {
 public:
-    BinaryCodec();
+    BinaryCodec(MemcachedConnection* conn) : conn_(conn) {}
 
 
     void onMessage(const muduo::net::TcpConnectionPtr& conn,
@@ -29,20 +29,20 @@ public:
         {
             // FIXME: use Buffer::peekInt32()
             const void* data = buf->peek();
-            int32_t be32 = *static_cast<const int32_t*>(data); // SIGBUS
-            const int32_t len = muduo::net::sockets::networkToHost32(be32);
-            if (len > 65536 || len < 0)
+            protocol_binary_response_header resp = 
+                *static_cast<const protocol_binary_response_header*>(data);
+            int bodylen = ntohl(resp.response.bodylen);
+            resp.response.bodylen = bodylen;
+            resp.response.status  = ntohs(resp.response.status);
+            if (bodylen < 0)
             {
-                LOG_ERROR << "Invalid length " << len;
-                conn->shutdown();  // FIXME: disable reading
+                LOG_ERROR << "Invalid length " << bodylen;
+                conn->shutdown();  // TODO: reconneted
                 break;
             }
-            else if (buf->readableBytes() >= len + kHeaderLen)
+            else if (buf->readableBytes() >= bodylen + kHeaderLen)
             {
-                buf->retrieve(kHeaderLen);
-                muduo::string message(buf->peek(), len);
-                messageCallback_(conn, message, receiveTime);
-                buf->retrieve(len);
+                onMessage(resp, buf);
             }
             else
             {
@@ -51,32 +51,38 @@ public:
         }
     }
 
-    // FIXME: TcpConnectionPtr
-    void send(muduo::net::TcpConnection* conn,
-                const muduo::StringPiece& message)
+   // // FIXME: TcpConnectionPtr
+   // void send(muduo::net::TcpConnection* conn,
+   //             const muduo::StringPiece& message)
+   // {
+   //     muduo::net::Buffer buf;
+   //     buf.append(message.data(), message.size());
+   //     int32_t len = static_cast<int32_t>(message.size());
+   //     int32_t be32 = muduo::net::sockets::hostToNetwork32(len);
+   //     buf.prepend(&be32, sizeof be32);
+   //     conn->send(&buf);
+   // }
+private:
+    void onMessage(const protocol_binary_response_header& resp, 
+                muduo::net::Buffer* buf)
     {
-        muduo::net::Buffer buf;
-        buf.append(message.data(), message.size());
-        int32_t len = static_cast<int32_t>(message.size());
-        int32_t be32 = muduo::net::sockets::hostToNetwork32(len);
-        buf.prepend(&be32, sizeof be32);
-        conn->send(&buf);
+        uint32_t id     = resp.response.opaque;//no need to call ntohl
+        int      cmd    = resp.response.opcode;
+        switch (cmd) {
+            case PROTOCOL_BINARY_CMD_SET:
+                conn_->onStoreTaskDone(id, Status(Status::kOK, resp.response.status));
+            break;
+        }
+        buf->retrieve(kHeaderLen + resp.response.bodylen);
     }
 
-public:
-    StoreCallback     stored_callback_;
-    RemoveCallback    remove_callback_;
-    GetCallback       get_callback_;
-    MultiGetCallback  mget_callback_;
 private:
-    StoreCallback     stored_callback_;
-    RemoveCallback    remove_callback_;
-    GetCallback       get_callback_;
-    MultiGetCallback  mget_callback_;
+    MemcachedConnection* conn_;
 
-    const static size_t kHeaderLen = sizeof(int32_t);
+    static const size_t kHeaderLen = sizeof(protocol_binary_response_header);
 };
 
+}
 }
 
 #endif  // MCX_MEMCACHED_BINARY_PROTOCOL_CODEC_H
