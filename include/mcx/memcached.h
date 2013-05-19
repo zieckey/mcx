@@ -21,6 +21,10 @@ namespace muduo {
 namespace mcx 
 {
 
+//forward declear the implement of memcached
+class MemcachedImpl;
+
+
 class GetResult {
 public:
     GetResult() {}
@@ -76,9 +80,9 @@ public:
               const MultiGetCallback& cb);
 
     //TODO add more interface
+    
 private:
-    class Impl;
-    boost::shared_ptr<Impl> impl_;
+    boost::shared_ptr<MemcachedImpl> impl_;
 };
 
 }

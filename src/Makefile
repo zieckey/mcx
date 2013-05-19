@@ -18,7 +18,7 @@ CPPFLAGS= $(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords
 LDFLAGS=$(TOP_LDFLAGS) -L/usr/local/lib -lpthread 
 LIBNAME=mcx
 
-SRCS := $(wildcard *.cc)
+SRCS := $(wildcard *.cc) $(wildcard internal/*.cc)
 OBJS := $(patsubst %.cc, .obj/%.o, $(SRCS)) 
 DEPS := $(patsubst .obj/%.o, .obj/%.d, $(OBJS))
 
@@ -40,6 +40,7 @@ check : $(TARGET_A) $(TARGET_SO)
 
 prepare : 
 	@mkdir -p .obj
+	@mkdir -p .obj/internal
 
 .obj/%.o : %.cc
 	$(CXX) $(CPPFLAGS) $< -o $@

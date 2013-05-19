@@ -1,12 +1,12 @@
 
-#include "internal/memcached_impl.h" 
+#include "internal/single_memcached.h" 
 
 namespace mcx 
 {
 
 Memcached::Memcached(const std::string& host, int port)
 {
-    impl_.reset(new Impl(host, port));
+    impl_.reset(new detail::SingleMemcached(host, port));
 }
 
 Memcached::~Memcached()
