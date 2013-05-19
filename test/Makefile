@@ -29,8 +29,7 @@ all : prepare $(TARGET)
 check : $(TARGET)
 	./$^
 
-$(TARGET) : $(OBJS)
-	$(MAKE) -C ../src
+$(TARGET) : $(OBJS) ../src/libmcx.a
 	$(CXX) $(OBJS) $(LDFLAGS) -o $@
 
 -include $(DEPS)
@@ -39,6 +38,7 @@ $(TARGET) : $(OBJS)
 	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 prepare : 
+	$(MAKE) -C ../src
 	@mkdir -p .obj
 
 install: $(TARGET) 

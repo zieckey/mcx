@@ -5,8 +5,6 @@
 
 #include <stdio.h>
 
-#include <boost/bind.hpp>
-
 #include <muduo/base/Logging.h>
 
 #include <muduo/net/EventLoop.h>
@@ -15,19 +13,18 @@
 
 namespace mcx 
 {
-
 namespace detail 
 {
 
 using namespace muduo;
 using namespace muduo::net;
 
+class MemcachedConnection;
+
 class SingleMemcached : public MemcachedImpl
 {
 public:
-    SingleMemcached(const std::string& host, int port) 
-        : loop_(NULL), host_(host), port_(port)
-    {}
+    SingleMemcached(const std::string& host, int port);
 
     ~SingleMemcached() {}
 
@@ -47,19 +44,10 @@ public:
     
 
 private:
-    void onConnection(const TcpConnectionPtr& conn);
-    void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time);
-
-private:
     typedef boost::shared_ptr<TcpClient> TcpClientPtr;
 
 private:
-
-    EventLoop*  loop_;
-    std::string             host_;
-    int                     port_;
-
-    TcpClientPtr            tcp_client_;
+    boost::shared_ptr<MemcachedConnection> conn_;
 };
 
 }//end of namespace detail 

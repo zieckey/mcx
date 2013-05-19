@@ -1,5 +1,5 @@
-#ifndef MCX_MEMCACHED_BINARY_PROTOCOL_CODEC_H
-#define MCX_MEMCACHED_BINARY_PROTOCOL_CODEC_H
+#ifndef MCX_MEMCACHED_TEXT_CODEC_H
+#define MCX_MEMCACHED_TEXT_CODEC_H
 
 #include <muduo/base/Logging.h>
 #include <muduo/net/Buffer.h>
@@ -9,15 +9,14 @@
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
 
-#include "Memcached.h"
+#include "memcached.h"
 
 namespace mcx {
 
-class BinaryProtocolCodec : boost::noncopyable
+class TextCodec : boost::noncopyable
 {
 public:
-    BinaryProtocolCodec();
-
+    TextCodec();
 
     void onMessage(const muduo::net::TcpConnectionPtr& conn,
                    muduo::net::Buffer* buf,

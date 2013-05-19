@@ -35,8 +35,7 @@ $(TARGET_SO) : $(OBJS)
 	$(CXX) $(LDFLAGS)  $(OBJS) -shared -o $@
 	
 check : $(TARGET_A) $(TARGET_SO)	
-	$(MAKE) check -C test
-	$(MAKE) check -C quick_test
+	$(MAKE) check -C ../test
 
 prepare : 
 	@mkdir -p .obj

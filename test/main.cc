@@ -15,9 +15,18 @@ void onGetDone(const std::string& key, const GetResult& result)
                 key.data(), result.value().data(), 
                 result.status().toString().data());
 }
+
+void onStoreDone(const std::string& key, const Status& status)
+{
+    printf("Key=[%s] status=[%s]\n", 
+                key.data(), 
+                status.toString().data());
+}
+
 void request(Memcached* m)
 {
     m->get("abc", &onGetDone);
+    m->store("hello", "world", &onStoreDone);
 }
 
 /*
@@ -40,10 +49,10 @@ int main(int argc, char* argv[])
     g_loop = &loop;
     loop.runAfter(30.0, boost::bind(&EventLoop::quit, &loop));
 
-    Memcached m("127.0.0.1", 15100);
+    Memcached m("10.16.29.20", 15100);
     m.initialize(&loop);
 
-    loop.runAfter(0.3, boost::bind(&request, &m));
+    loop.runAfter(1, boost::bind(&request, &m));
 
     loop.loop();
 }
