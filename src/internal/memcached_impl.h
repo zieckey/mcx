@@ -2,7 +2,7 @@
 #ifndef XASYNC_MEMCACHED_IMPL_H
 #define XASYNC_MEMCACHED_IMPL_H
 
-#include "Memcached.h"
+#include "../memcached.h"
 
 #include <stdio.h>
 
@@ -71,7 +71,6 @@ public:
     {
     }
 
-
 private:
     void onConnection(const TcpConnectionPtr& conn)
     {
@@ -95,10 +94,14 @@ private:
             << "[" << buf->retrieveAllAsString() << "]";
     }
 
-
+private:
+    void mget(const std::string* keys, size_t key_count, const MultiGetCallback& cb)
+    {
+    }
 
 private:
     typedef boost::shared_ptr<TcpClient> TcpClientPtr;
+
 private:
 
     EventLoop*  loop_;

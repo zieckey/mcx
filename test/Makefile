@@ -11,7 +11,7 @@ CFLAGS=$(TOP_CFLAGS) -c -fPIC \
 	   -Wshadow -Wcast-qual -Wcast-align \
 	   -Wwrite-strings -Wsign-compare \
 	   -Winvalid-pch -fms-extensions -Wall \
-	   -I../3rdparty -I../src \
+	   -I../3rdparty -I../include \
 	   -I ../3rdparty/muduo \
 	   -MMD
 CPPFLAGS=$(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords 

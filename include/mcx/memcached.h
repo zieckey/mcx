@@ -10,7 +10,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Status.h"
+#include "status.h"
 
 namespace muduo { 
     namespace net { 
