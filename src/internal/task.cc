@@ -13,11 +13,11 @@ using namespace std;
 Task::~Task() {
 }
 
-StoreTask::StoreTask(uint32_t id, const std::string& key, const std::string& value,
-                     uint16_t vbucket_id, const StoreCallback& handler)
-    : Task(id), key_(key), value_(value)
+StoreTask::StoreTask(uint32_t _id, const std::string& k, const std::string& v,
+                     uint16_t vbucket_id, const StoreCallback& cb)
+    : Task(_id), key_(k), value_(v)
     , vbucket_id_(vbucket_id)
-    , handler_(handler) 
+    , handler_(cb) 
 {
     memset(&req_, 0, sizeof(req_));
 }
@@ -42,17 +42,19 @@ void StoreTask::run(MemcachedConnection* m) {
                         (key_.size()) + 
                         (value_.size());
     req_.message.header.request.bodylen  = htonl(static_cast<uint32_t>(bodylen));
-
-    m->tcp_client()->connection()->send(&req_, sizeof(req_));
-    m->tcp_client()->connection()->send(key_.data(), key_.size());
-    m->tcp_client()->connection()->send(value_.data(), value_.size());
+    
+    TcpConnectionPtr c = m->tcp_client()->connection();
+    if (!c) {
+        LOG_ERROR << m->host() << ":" << m->port() << " NOT CONNECTED!";
+        report(Status(Status::kNetworkError, -1));
+        return;
+    }
 
     Buffer buf;
     buf.append(&req_, sizeof(req_));
     buf.append(key_.data(), key_.size());
     buf.append(value_.data(), value_.size());
-    muduo::string s = buf.retrieveAllAsString();
-    writeToFile("/tmp/set.bin", s.data(), s.size());
+    c->send(&buf);
 }
 
 

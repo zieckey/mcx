@@ -29,9 +29,9 @@ public:
     typedef boost::shared_ptr<BinaryCodec> BinaryCodecPtr;
     typedef std::map<uint32_t /*task_id*/, TaskPtr> TaskPtrMap;
 
-public:    
-    MemcachedConnection(const std::string& host, int port)
-        : loop_(NULL), seqno_(0), host_(host), port_(port)
+public:
+    MemcachedConnection(const std::string& srv_host, int listen_port)
+        : loop_(NULL), seqno_(0), host_(srv_host), port_(listen_port)
     {}
 
     bool connect(EventLoop* loop);
@@ -47,7 +47,12 @@ public:
         return tcp_client_;
     }
 
-    void onStoreTaskDone(int task_id, const Status& status);
+    const std::string& host() const { return host_; }
+    int port() const { return port_; }
+
+    /// called by Codec
+public:
+    void onStoreTaskDone(int task_id, int memcached_response_code);
  
 private:
     void onConnection(const TcpConnectionPtr& conn);

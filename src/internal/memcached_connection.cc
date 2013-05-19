@@ -84,7 +84,7 @@ void MemcachedConnection::onMessage(const TcpConnectionPtr& conn, Buffer* buf, T
         << conn->peerAddress().toIpPort();// << "[" << buf->retrieveAllAsString() << "]";
 }
 
-void MemcachedConnection::onStoreTaskDone(int task_id, const Status& status) 
+void MemcachedConnection::onStoreTaskDone(int task_id, int memcached_response_code) 
 {
     TaskPtrMap::iterator it = running_tasks_.find(task_id);
     assert(it != running_tasks_.end());
@@ -96,7 +96,12 @@ void MemcachedConnection::onStoreTaskDone(int task_id, const Status& status)
 
     assert(dynamic_cast<StoreTask*>(it->second.get()));
     StoreTask* task = static_cast<StoreTask*>(it->second.get());
-    task->report(status);
+    if (memcached_response_code == PROTOCOL_BINARY_RESPONSE_SUCCESS) {
+        task->report(Status(Status::kOK, memcached_response_code));
+    } else {
+        //TODO check more status by memcached_response_code
+        task->report(Status(Status::kNetworkError, memcached_response_code));
+    }
 }
 
 }//end of namespace detail 

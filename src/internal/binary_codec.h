@@ -70,7 +70,7 @@ private:
         int      cmd    = resp.response.opcode;
         switch (cmd) {
             case PROTOCOL_BINARY_CMD_SET:
-                conn_->onStoreTaskDone(id, Status(Status::kOK, resp.response.status));
+                conn_->onStoreTaskDone(id, resp.response.status);
             break;
         }
         buf->retrieve(kHeaderLen + resp.response.bodylen);

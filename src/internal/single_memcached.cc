@@ -26,6 +26,7 @@ void SingleMemcached::store(
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
     TaskPtr task(new StoreTask(conn_->nextSeqNo(), key, value, vbucket_id, cb));
     conn_->run(task);
+    //TODO add a timer to handler timeout or other exception
 }
 
 void SingleMemcached::remove(const std::string& key,

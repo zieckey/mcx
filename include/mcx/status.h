@@ -31,7 +31,10 @@ public:
     bool isNetworkError() const { return code_ == kNetworkError;}
     Code code() const           { return code_;                 }
 
-    void SetCode(Code c)        { code_ = c;                    }
+    void setCode(Code c)        { code_ = c;                    }
+
+    void setMemcachedReponseCode(int c)        
+    { memcached_response_code_ = c; }
 
     std::string toString() const {
         static std::string error_message[] = {
