@@ -24,12 +24,12 @@ typedef boost::shared_ptr<Task> TaskPtr;
 
 class MemcachedConnection
 {
-public:    
+  public: 
     typedef boost::shared_ptr<TcpClient>   TcpClientPtr;
     typedef boost::shared_ptr<BinaryCodec> BinaryCodecPtr;
     typedef std::map<uint32_t /*task_id*/, TaskPtr> TaskPtrMap;
 
-public:
+  public:
     MemcachedConnection(const std::string& srv_host, int listen_port)
         : loop_(NULL), seqno_(0), host_(srv_host), port_(listen_port)
     {}
@@ -51,14 +51,21 @@ public:
     int port() const { return port_; }
 
     /// called by Codec
-public:
-    void onStoreTaskDone(int task_id, int memcached_response_code);
+  public:
+    void onStoreTaskDone(uint32_t task_id, int memcached_response_code);
+    void onRemoveTaskDone(uint32_t task_id, int memcached_response_code);
+    void onGetTaskDone(uint32_t task_id, int memcached_response_code, 
+                const std::string& return_value);
+
+  private:
+    template< class TaskT >
+    void onTaskDone(uint32_t task_id, int memcached_response_code);
  
-private:
+  private:
     void onConnection(const TcpConnectionPtr& conn);
     void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time);
 
-private:
+  private:
     EventLoop*      loop_;
     TcpClientPtr    tcp_client_;
     uint32_t        seqno_; //the sequence number

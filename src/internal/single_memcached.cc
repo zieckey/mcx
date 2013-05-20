@@ -8,11 +8,13 @@ namespace detail
 {
 
 SingleMemcached::SingleMemcached(const std::string& host, int port)
+    : loop_(NULL)
 {
     conn_.reset(new MemcachedConnection(host, port));
 }
 
 bool SingleMemcached::initialize(EventLoop* loop) {
+    loop_ = loop;
     conn_->connect(loop);
     return true;
 }
@@ -22,7 +24,7 @@ void SingleMemcached::store(
             const std::string& value,
             const StoreCallback& cb)
 {
-    LOG_DEBUG << "store key=" << key << " value=" << value;
+    LOG_DEBUG << "key=" << key << " value=" << value;
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
     TaskPtr task(new StoreTask(conn_->nextSeqNo(), key, value, vbucket_id, cb));
     conn_->run(task);
@@ -32,15 +34,19 @@ void SingleMemcached::store(
 void SingleMemcached::remove(const std::string& key,
             const RemoveCallback& cb)
 {
+    LOG_DEBUG << "key=" << key;
+    uint16_t vbucket_id = 0;//TODO calculate vbucket id
+    TaskPtr task(new RemoveTask(conn_->nextSeqNo(), key, vbucket_id, cb));
+    conn_->run(task);
 }
 
 void SingleMemcached::get(const std::string& key,
             const GetCallback& cb)
 {
-    //char buf[1024] = {};
-    //snprintf(buf, sizeof(buf), "get %s\r\n", key.data());
-    //tcp_client_->connection()->send(buf, strlen(buf));
-    //LOG_TRACE << "request get key=[" << key << "]";
+    LOG_DEBUG << "key=" << key;
+    uint16_t vbucket_id = 0;//TODO calculate vbucket id
+    TaskPtr task(new GetTask(conn_->nextSeqNo(), key, vbucket_id, cb));
+    conn_->run(task);
 }
 
 void SingleMemcached::mget(const std::vector<std::string>& keys,

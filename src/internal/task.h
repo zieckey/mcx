@@ -53,24 +53,48 @@ private:
     protocol_binary_request_set req_;
 };
 
-//class RemoveTask : public Task {
-//public:
-//    RemoveTask(const std::string& key, uint16_t vbucket_id,
-//                const RemoveCallback& handler)
-//        : key_(key), vbucket_id_(vbucket_id)
-//        , handler_(handler) {}
-//
-//    virtual TaskResult* run(struct memcached_st* m);
-//
-//    const std::string& key() const { return key_; }
-//    const RemoveCallback& handler() const { return handler_; }
-//private:
-//    std::string key_;
-//    uint16_t vbucket_id_;
-//
-//    RemoveCallback handler_;
-//};
-//
+class RemoveTask : public Task {
+public:
+    RemoveTask(uint32_t id, const std::string& key, uint16_t vbucket_id,
+               const RemoveCallback& handler);
+
+    virtual void run(MemcachedConnection* m);
+
+    void report(const Status& status);
+
+    const std::string& key() const { return key_; }
+    const RemoveCallback& handler() const { return handler_; }
+
+private:
+    std::string key_;
+    uint16_t vbucket_id_;
+
+    RemoveCallback handler_;
+
+    protocol_binary_request_delete req_;
+};
+
+class GetTask : public Task {
+public:
+    GetTask(uint32_t id, const std::string& key, uint16_t vbucket_id,
+               const GetCallback& handler);
+
+    virtual void run(MemcachedConnection* m);
+
+    void report(const GetResult& status);
+
+    const std::string& key() const { return key_; }
+    const GetCallback& handler() const { return handler_; }
+
+private:
+    std::string key_;
+    uint16_t vbucket_id_;
+
+    GetCallback handler_;
+
+    protocol_binary_request_get req_;
+};
+
 //class GetTask : public Task {
 //public:
 //    GetTask(const std::string& key, uint16_t vbucket_id,

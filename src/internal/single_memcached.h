@@ -46,8 +46,10 @@ public:
 private:
     typedef boost::shared_ptr<TcpClient> TcpClientPtr;
 
+    typedef boost::shared_ptr<MemcachedConnection> MemcachedConnectionPtr;
 private:
-    boost::shared_ptr<MemcachedConnection> conn_;
+    EventLoop*             loop_;
+    MemcachedConnectionPtr conn_;
 };
 
 }//end of namespace detail 

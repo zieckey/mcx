@@ -26,8 +26,8 @@ TARGET=mcx
 all : prepare $(TARGET) 
 	$(MAKE) install
 
-check : $(TARGET)
-	./$^
+check : prepare $(TARGET)
+	./$(TARGET)
 
 $(TARGET) : $(OBJS) ../src/libmcx.a
 	$(CXX) $(OBJS) $(LDFLAGS) -o $@

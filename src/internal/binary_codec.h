@@ -27,17 +27,17 @@ public:
     {
         while (buf->readableBytes() >= kHeaderLen) // kHeaderLen == 24
         {
-            // FIXME: use Buffer::peekInt32()
             const void* data = buf->peek();
             protocol_binary_response_header resp = 
                 *static_cast<const protocol_binary_response_header*>(data);
             int bodylen = ntohl(resp.response.bodylen);
             resp.response.bodylen = bodylen;
             resp.response.status  = ntohs(resp.response.status);
+            resp.response.keylen  = ntohs(resp.response.keylen);
             if (bodylen < 0)
             {
                 LOG_ERROR << "Invalid length " << bodylen;
-                conn->shutdown();  // TODO: reconneted
+                conn->shutdown();
                 break;
             }
             else if (buf->readableBytes() >= bodylen + kHeaderLen)
@@ -46,12 +46,12 @@ public:
             }
             else
             {
+                LOG_TRACE << "need recv more data";
                 break;
             }
         }
     }
 
-   // // FIXME: TcpConnectionPtr
    // void send(muduo::net::TcpConnection* conn,
    //             const muduo::StringPiece& message)
    // {
@@ -71,7 +71,21 @@ private:
         switch (cmd) {
             case PROTOCOL_BINARY_CMD_SET:
                 conn_->onStoreTaskDone(id, resp.response.status);
-            break;
+                break;
+            case PROTOCOL_BINARY_CMD_DELETE:
+                conn_->onRemoveTaskDone(id, resp.response.status);
+                break;
+            case PROTOCOL_BINARY_CMD_GET:
+                LOG_DEBUG << "GET:resp.response.bodylen=" << resp.response.bodylen 
+                    << " resp.response.keylen=" << resp.response.keylen;
+                {
+                    std::string value(buf->peek() + sizeof(resp), resp.response.bodylen);
+                    conn_->onGetTaskDone(id, resp.response.status, value);
+                }
+                break;
+                //TODO MULTI-GET
+            default:
+                break;
         }
         buf->retrieve(kHeaderLen + resp.response.bodylen);
     }

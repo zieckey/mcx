@@ -13,9 +13,9 @@ using namespace std;
 Task::~Task() {
 }
 
-StoreTask::StoreTask(uint32_t _id, const std::string& k, const std::string& v,
+StoreTask::StoreTask(uint32_t task_id, const std::string& k, const std::string& v,
                      uint16_t vbucket_id, const StoreCallback& cb)
-    : Task(_id), key_(k), value_(v)
+    : Task(task_id), key_(k), value_(v)
     , vbucket_id_(vbucket_id)
     , handler_(cb) 
 {
@@ -23,7 +23,7 @@ StoreTask::StoreTask(uint32_t _id, const std::string& k, const std::string& v,
 }
 
 void StoreTask::run(MemcachedConnection* m) {
-    LOG_DEBUG << "Run store task id=" << id();
+    LOG_DEBUG << "store task id=" << id();
     uint32_t expire = 0;
 	uint32_t flags  = 0;
 
@@ -64,26 +64,86 @@ void StoreTask::report(const Status& status)
     handler_(key_, status);
 }
 
-//TaskResult* RemoveTask::run(struct memcached_st* m) {
-//    uint32_t expire = 0;
-//	memcached_return_t ret =
-//        memcached_binary_delete(m, key_.data(), key_.size(),
-//                                expire, vbucket_id_);
-//	if (MEMCACHED_SUCCESS == ret) {
-//		return new MtDelResult(this, Error::OK);
-//	} else if (MEMCACHED_TIMEOUT == ret) {
-//		return new MtDelResult(this, Error::E_TIMED_OUT);
-//	} else {
-////        const char* szErr = memcached_strerror(m, ret);
-////        if (ret == MEMCACHED_ERRNO) {
-////            szErr = strerror(errno);
-////            fprintf(stderr, "memcached_set errno: (%d) %s\n", errno, szErr);
-////        } else {
-////            fprintf(stderr, "memcached_set: (%d) %s\n", ret, szErr);
-////        }
-//		return new MtDelResult(this, Error::E_NOT_FOUND);
-//	}
-//}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+RemoveTask::RemoveTask(uint32_t task_id, const std::string& k, uint16_t vbucket_id,
+            const RemoveCallback& cb)
+    : Task(task_id), key_(k), vbucket_id_(vbucket_id)
+    , handler_(cb) {}
+
+
+void RemoveTask::run(MemcachedConnection* m) {
+    LOG_DEBUG << "remove task id=" << id();
+    
+    req_.message.header.request.magic    = PROTOCOL_BINARY_REQ;
+    req_.message.header.request.opcode   = PROTOCOL_BINARY_CMD_DELETE;
+    req_.message.header.request.keylen   = htons(static_cast<uint16_t>(key_.size()));
+    req_.message.header.request.extlen   = 0;
+    req_.message.header.request.datatype = PROTOCOL_BINARY_RAW_BYTES;
+    req_.message.header.request.vbucket  = htons(vbucket_id_);
+    req_.message.header.request.bodylen  = htonl(static_cast<uint32_t>(key_.size()));
+    req_.message.header.request.opaque   = id();
+    req_.message.header.request.cas      = 0;
+    
+    TcpConnectionPtr c = m->tcp_client()->connection();
+    if (!c) {
+        LOG_ERROR << m->host() << ":" << m->port() << " NOT CONNECTED!";
+        report(Status(Status::kNetworkError, -1));
+        return;
+    }
+
+    Buffer buf;
+    buf.append(req_.bytes, sizeof(req_.bytes));
+    buf.append(key_.data(), key_.size());
+    c->send(&buf);
+}
+
+void RemoveTask::report(const Status& status)
+{
+    handler_(key_, status);
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+GetTask::GetTask(uint32_t task_id, const std::string& k, uint16_t vbucket_id,
+            const GetCallback& cb)
+    : Task(task_id), key_(k), vbucket_id_(vbucket_id)
+    , handler_(cb) {}
+
+
+void GetTask::run(MemcachedConnection* m) {
+    LOG_DEBUG << "get task id=" << id();
+    
+    req_.message.header.request.magic    = PROTOCOL_BINARY_REQ;
+    req_.message.header.request.opcode   = PROTOCOL_BINARY_CMD_GET;
+    req_.message.header.request.keylen   = htons(static_cast<uint16_t>(key_.size()));
+    req_.message.header.request.extlen   = 0;
+    req_.message.header.request.datatype = PROTOCOL_BINARY_RAW_BYTES;
+    req_.message.header.request.vbucket  = htons(vbucket_id_);
+    req_.message.header.request.bodylen  = htonl(static_cast<uint32_t>(key_.size()));
+    req_.message.header.request.opaque   = id();
+    req_.message.header.request.cas      = 0;
+    
+    TcpConnectionPtr c = m->tcp_client()->connection();
+    if (!c) {
+        LOG_ERROR << m->host() << ":" << m->port() << " NOT CONNECTED!";
+        Status s(Status::kNetworkError, -1);
+        report(GetResult(s,""));
+        return;
+    }
+
+    Buffer buf;
+    buf.append(req_.bytes, sizeof(req_.bytes));
+    buf.append(key_.data(), key_.size());
+    c->send(&buf);
+}
+
+void GetTask::report(const GetResult& r)
+{
+    handler_(key_, r);
+}
+
 //
 //TaskResult* GetTask::run(struct memcached_st* m) {
 //	uint32_t flags = 0;

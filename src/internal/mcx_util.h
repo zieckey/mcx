@@ -9,7 +9,7 @@ namespace mcx
 namespace detail
 {
 
-bool writeToFile( const char* filepath, const void* content, const size_t len )
+inline bool writeToFile( const char* filepath, const void* content, const size_t len )
 {
     FILE* fp = ::fopen( filepath, "w+");
 
@@ -25,7 +25,8 @@ bool writeToFile( const char* filepath, const void* content, const size_t len )
 
     return true;
 }
-bool writeToFile( const char* filepath, const std::string& content)
+
+inline bool writeToFile( const char* filepath, const std::string& content)
 {
     return writeToFile(filepath, content.data(), content.size());
 }

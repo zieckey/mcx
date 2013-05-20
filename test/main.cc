@@ -12,20 +12,29 @@ EventLoop* g_loop = NULL;
 
 void onGetDone(const std::string& key, const GetResult& result)
 {
-    printf("Key=[%s] value=[%s] status=[%s]\n", 
-                key.data(), result.value().data(), 
-                result.status().toString().data());
+    LOG_INFO << "onGetDone:Key=[" << key << "] value=[" << result.value() << "] status=[" << result.status().toString() << "]";
 }
 
 void onStoreDone(const std::string& key, const Status& status)
 {
-    LOG_INFO << "Key=[" << key << "] status=[" << status.toString() << "]";
+    LOG_INFO << "onStoreDone:Key=[" << key << "] status=[" << status.toString() << "]";
+}
+
+void onRemoveDone(const std::string& key, const Status& status)
+{
+    LOG_INFO << "onRemoveDone:Key=[" << key << "] status=[" << status.toString() << "]";
 }
 
 void request(Memcached* m)
 {
     m->get("abc", &onGetDone);
+    m->remove("hello", &onRemoveDone);
     m->store("hello", "world", &onStoreDone);
+    m->get("hello", &onGetDone);
+    sleep(1);
+    m->remove("hello", &onRemoveDone);
+    sleep(1);
+    m->get("hello", &onGetDone);
 }
 
 /*
@@ -48,7 +57,7 @@ int main(int argc, char* argv[])
     g_loop = &loop;
     loop.runAfter(30.0, boost::bind(&EventLoop::quit, &loop));
 
-    Memcached m("10.16.29.20", 15100);
+    Memcached m("localhost", 15100);
     m.initialize(&loop);
 
     loop.runAfter(1, boost::bind(&request, &m));
