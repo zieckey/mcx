@@ -34,35 +34,41 @@ bool MemcachedConnection::connect(EventLoop* loop) {
 
 void MemcachedConnection::run(TaskPtr& task)
 {
-    running_tasks_[task->id()] = task;
     task->run(this);
+    if (task->isMultiGet()) {
+        mget_running_tasks_[task->id()] = task;
+            LOG_TRACE << "add multi-get id=" << task->id();
+        MultiGetTask* mtask = static_cast<MultiGetTask*>(task.get());
+        for (uint32_t id = mtask->getFristGetTaskId(); id <= mtask->getNoopTaskId(); ++id) {
+            mget_running_tasks_[id] = task;
+        }
+    } else { 
+        running_tasks_[task->id()] = task;
+    }
 }
 
-//void MemcachedConnection::store(const std::string& key, 
-//            const std::string& value,
-//            const StoreCallback& cb)
-//{
-//}
-//
-//void MemcachedConnection::remove(const std::string& key,
-//            const RemoveCallback& cb)
-//{
-//}
-//
-//void MemcachedConnection::get(const std::string& key,
-//            const GetCallback& cb)
-//{
-//    char buf[1024] = {};
-//    snprintf(buf, sizeof(buf), "get %s\r\n", key.data());
-//    tcp_client_->connection()->send(buf, strlen(buf));
-//    LOG_TRACE << "request get key=[" << key << "]";
-//}
-//
-//void MemcachedConnection::mget(const std::vector<std::string>& keys,
-//            const MultiGetCallback& cb)
-//{
-//}
-//
+void MemcachedConnection::cancelTask(const TaskPtr& task)
+{
+    removeTask(task);
+    LOG_TRACE << "cancelTask id=" << task->id();
+    assert(false);
+}
+
+void MemcachedConnection::removeTask(const TaskPtr& task)
+{
+    if (task->isMultiGet()) {
+        mget_running_tasks_.erase(task->id());
+            LOG_TRACE << "remove multi-get id=" << task->id();
+        MultiGetTask* mtask = static_cast<MultiGetTask*>(task.get());
+        for (uint32_t id = mtask->getFristGetTaskId(); id <= mtask->getNoopTaskId(); ++id) {
+            mget_running_tasks_.erase(id);
+            LOG_TRACE << "remove multi-get id=" << id;
+        }
+    } else { 
+        running_tasks_.erase(task->id());
+    }
+}
+
 void MemcachedConnection::onConnection(const TcpConnectionPtr& conn)
 {
     LOG_TRACE << conn->localAddress().toIpPort() << " -> "
@@ -75,40 +81,13 @@ void MemcachedConnection::onConnection(const TcpConnectionPtr& conn)
     }
     else
     {
+        //TODO
     }
-}
-
-void MemcachedConnection::onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time)
-{
-    LOG_DEBUG << "recv " << buf->readableBytes() << " bytes from " 
-        << conn->peerAddress().toIpPort();// << "[" << buf->retrieveAllAsString() << "]";
 }
 
 void MemcachedConnection::onStoreTaskDone(uint32_t task_id, int memcached_response_code) 
 {
-#if 1
     onTaskDone<StoreTask>(task_id, memcached_response_code);
-#else
-    TaskPtrMap::iterator it = running_tasks_.find(task_id);
-    assert(it != running_tasks_.end());
-    if (it == running_tasks_.end()) 
-    {
-        LOG_ERROR << "StoreTask task_id=" << task_id << " NOT FOUND, maybe timeout!";
-        return;
-    }
-
-    assert(dynamic_cast<StoreTask*>(it->second.get()));
-    StoreTask* task = static_cast<StoreTask*>(it->second.get());
-    assert(task_id == task->id());
-    if (memcached_response_code == PROTOCOL_BINARY_RESPONSE_SUCCESS) {
-        task->report(Status(Status::kOK, memcached_response_code));
-    } else {
-        //TODO check more status by memcached_response_code
-        task->report(Status(Status::kNetworkError, memcached_response_code));
-    }
-
-    running_tasks_.erase(it);
-#endif
 }
 
 void MemcachedConnection::onRemoveTaskDone(uint32_t task_id, int memcached_response_code) 
@@ -127,14 +106,22 @@ void MemcachedConnection::onTaskDone(uint32_t task_id, int memcached_response_co
         return;
     }
 
+    loop_->cancel(it->second->getTimerId());
+
     assert(dynamic_cast<TaskT*>(it->second.get()));
     TaskT* task = static_cast<TaskT*>(it->second.get());
     assert(task_id == task->id());
-    if (memcached_response_code == PROTOCOL_BINARY_RESPONSE_SUCCESS) {
-        task->report(Status(Status::kOK, memcached_response_code));
-    } else {
-        //TODO check more status by memcached_response_code
-        task->report(Status(Status::kNetworkError, memcached_response_code));
+    switch (memcached_response_code) {
+        case PROTOCOL_BINARY_RESPONSE_SUCCESS:
+            task->report(Status(Status::kOK, memcached_response_code));
+            break;
+        case PROTOCOL_BINARY_RESPONSE_KEY_ENOENT:
+            task->report(Status(Status::kNotFound, memcached_response_code));
+            break;
+        default:
+            task->report(Status(Status::kNetworkError, memcached_response_code));
+            break;
+
     }
 
     running_tasks_.erase(it);
@@ -150,6 +137,8 @@ void MemcachedConnection::onGetTaskDone(uint32_t task_id,
         LOG_ERROR << "task_id=" << task_id << " NOT FOUND, maybe timeout!";
         return;
     }
+
+    loop_->cancel(it->second->getTimerId());
 
     assert(dynamic_cast<GetTask*>(it->second.get()));
     GetTask* task = static_cast<GetTask*>(it->second.get());
@@ -171,6 +160,72 @@ void MemcachedConnection::onGetTaskDone(uint32_t task_id,
     }
 
     running_tasks_.erase(it);
+}
+
+void MemcachedConnection::onMultiGetTaskOneResponse(uint32_t cmd_id, 
+            int memcached_response_code, const std::string& return_value)
+{
+    TaskPtrMap::iterator it = mget_running_tasks_.find(cmd_id);
+    assert(it != mget_running_tasks_.end());
+    if (it == mget_running_tasks_.end()) 
+    {
+        LOG_ERROR << "cmd_id=" << cmd_id << " NOT FOUND, maybe timeout!";
+        return;
+    }
+
+    MultiGetTask* task = static_cast<MultiGetTask*>(it->second.get());
+    
+    switch (memcached_response_code) {
+        case PROTOCOL_BINARY_RESPONSE_SUCCESS:
+            task->onResult(cmd_id, return_value, Status(Status::kOK, memcached_response_code));
+            break;
+        case PROTOCOL_BINARY_RESPONSE_KEY_ENOENT:
+            task->onResult(cmd_id, return_value, Status(Status::kNotFound, memcached_response_code));
+            break;
+        default:
+            task->onResult(cmd_id, return_value, Status(Status::kNetworkError, memcached_response_code));
+            break;
+    }
+
+    mget_running_tasks_.erase(it);
+}
+
+void MemcachedConnection::onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached_response_code)
+{
+    TaskPtrMap::iterator it = mget_running_tasks_.find(noop_cmd_id);
+    assert(it != mget_running_tasks_.end());
+    if (it == mget_running_tasks_.end()) 
+    {
+        LOG_ERROR << "cmd_id=" << noop_cmd_id << " NOT FOUND, maybe timeout!";
+        return;
+    }
+
+    loop_->cancel(it->second->getTimerId());
+
+    MultiGetTask* task = static_cast<MultiGetTask*>(it->second.get());
+    assert(task->getNoopTaskId() == noop_cmd_id);
+    //switch (memcached_response_code) {
+    //    case PROTOCOL_BINARY_RESPONSE_SUCCESS:
+    //        task->onResult(cmd_id, return_value, Status(Status::kOK, memcached_response_code));
+    //        break;
+    //    case PROTOCOL_BINARY_RESPONSE_KEY_ENOENT:
+    //        task->onResult(cmd_id, return_value, Status(Status::kNotFound, memcached_response_code));
+    //        break;
+    //    default:
+    //        task->onResult(cmd_id, return_value, Status(Status::kNetworkError, memcached_response_code));
+    //        break;
+    //}
+
+    for (uint32_t id = task->getFristGetTaskId(); id < task->getNoopTaskId(); ++id) {
+        it = mget_running_tasks_.find(id);
+        if (it == mget_running_tasks_.end()) {
+            continue;
+        }
+        task = static_cast<MultiGetTask*>(it->second.get());
+        task->onResult(id, "", Status(Status::kNotFound, 0));
+    }
+
+    task->report();
 }
 
 }//end of namespace detail 

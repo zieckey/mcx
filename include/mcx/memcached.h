@@ -1,4 +1,3 @@
-
 #ifndef XASYNC_MEMCACHED_H
 #define XASYNC_MEMCACHED_H
 
@@ -23,7 +22,6 @@ namespace mcx
 
 //forward declear the implement of memcached
 class MemcachedImpl;
-
 
 class GetResult {
 public:
@@ -81,8 +79,13 @@ public:
 
     //TODO add more interface
     
+public:
+    void setTimeout(int ms) { timeout_ms_ = ms;   }
+    int  getTimeout() const { return timeout_ms_; }
+
 private:
     boost::shared_ptr<MemcachedImpl> impl_;
+    int timeout_ms_;
 };
 
 }

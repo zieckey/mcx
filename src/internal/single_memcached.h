@@ -13,6 +13,7 @@
 
 namespace mcx 
 {
+
 namespace detail 
 {
 
@@ -24,7 +25,7 @@ class MemcachedConnection;
 class SingleMemcached : public MemcachedImpl
 {
 public:
-    SingleMemcached(const std::string& host, int port);
+    SingleMemcached(Memcached* parent, const std::string& host, int port);
 
     ~SingleMemcached() {}
 
@@ -42,11 +43,11 @@ public:
     virtual void mget(const std::vector<std::string>& keys,
               const MultiGetCallback& cb);
     
-
 private:
     typedef boost::shared_ptr<TcpClient> TcpClientPtr;
 
     typedef boost::shared_ptr<MemcachedConnection> MemcachedConnectionPtr;
+
 private:
     EventLoop*             loop_;
     MemcachedConnectionPtr conn_;

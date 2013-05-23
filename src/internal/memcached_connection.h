@@ -17,10 +17,12 @@ using namespace muduo;
 using namespace muduo::net;
 
 class Task;
+class MultiGetTask;
 
 class BinaryCodec;
 
 typedef boost::shared_ptr<Task> TaskPtr;
+typedef boost::shared_ptr<MultiGetTask> MultiGetTaskPtr;
 
 class MemcachedConnection
 {
@@ -42,6 +44,7 @@ class MemcachedConnection
     }
 
     void run(TaskPtr& task);
+    void cancelTask(const TaskPtr& task);
 
     TcpClientPtr& tcp_client() {
         return tcp_client_;
@@ -50,20 +53,25 @@ class MemcachedConnection
     const std::string& host() const { return host_; }
     int port() const { return port_; }
 
+
     /// called by Codec
   public:
     void onStoreTaskDone(uint32_t task_id, int memcached_response_code);
     void onRemoveTaskDone(uint32_t task_id, int memcached_response_code);
     void onGetTaskDone(uint32_t task_id, int memcached_response_code, 
                 const std::string& return_value);
+    void onMultiGetTaskOneResponse(uint32_t task_id, 
+                int memcached_response_code, const std::string& return_value);
+    void onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached_response_code);
 
   private:
     template< class TaskT >
     void onTaskDone(uint32_t task_id, int memcached_response_code);
  
+    void removeTask(const TaskPtr& task);
+
   private:
     void onConnection(const TcpConnectionPtr& conn);
-    void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time);
 
   private:
     EventLoop*      loop_;
@@ -74,6 +82,8 @@ class MemcachedConnection
     int             port_;
 
     TaskPtrMap      running_tasks_;
+
+    TaskPtrMap      mget_running_tasks_;//multi-get running tasks
 
     BinaryCodecPtr  codec_;
 };

@@ -76,14 +76,22 @@ private:
                 conn_->onRemoveTaskDone(id, resp.response.status);
                 break;
             case PROTOCOL_BINARY_CMD_GET:
-                LOG_DEBUG << "GET:resp.response.bodylen=" << resp.response.bodylen 
-                    << " resp.response.keylen=" << resp.response.keylen;
                 {
                     std::string value(buf->peek() + sizeof(resp), resp.response.bodylen);
                     conn_->onGetTaskDone(id, resp.response.status, value);
                 }
                 break;
-                //TODO MULTI-GET
+            case PROTOCOL_BINARY_CMD_GETQ:
+                {
+                    std::string value(buf->peek() + sizeof(resp), resp.response.bodylen);
+                    conn_->onMultiGetTaskOneResponse(id, resp.response.status, value);
+                    LOG_DEBUG << "GETQ, opaque=" << id << " value=" << value;
+                }
+                break;
+            case PROTOCOL_BINARY_CMD_NOOP:
+                LOG_DEBUG << "GETQ, NOOP opaque=" << id;
+                conn_->onMultiGetTaskDone(id, resp.response.status);
+                break;
             default:
                 break;
         }

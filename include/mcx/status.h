@@ -48,7 +48,7 @@ public:
         assert(code_ >= 0 && code_ < kUnknown);
         std::string e = error_message[code_];
         char buf[64] = {};
-        snprintf(buf, sizeof(buf), " , memcached response code=%d", 
+        snprintf(buf, sizeof(buf), " , mccode=%d", 
                     memcached_response_code_);
         e += buf;
         return e;

@@ -5,8 +5,9 @@ namespace mcx
 {
 
 Memcached::Memcached(const std::string& host, int port)
+    : timeout_ms_(100)
 {
-    impl_.reset(new detail::SingleMemcached(host, port));
+    impl_.reset(new detail::SingleMemcached(this, host, port));
 }
 
 Memcached::~Memcached()

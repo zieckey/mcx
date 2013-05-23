@@ -8,7 +8,9 @@ namespace mcx
     
 class MemcachedImpl : public boost::noncopyable
 {
-public:
+  public:
+    MemcachedImpl(Memcached* m) : parent_(m) {}
+
     virtual ~MemcachedImpl() {}
 
     virtual bool initialize(muduo::net::EventLoop* loop) = 0;
@@ -26,6 +28,13 @@ public:
                 const MultiGetCallback& cb) = 0;
 
     //TODO more interface
+    
+  public: 
+    Memcached* parent() const { return parent_; }
+
+
+  private:
+    Memcached* parent_;
 };
 
 }
