@@ -51,7 +51,6 @@ void MemcachedConnection::cancelTask(const TaskPtr& task)
 {
     removeTask(task);
     LOG_TRACE << "cancelTask id=" << task->id();
-    assert(false);
 }
 
 void MemcachedConnection::removeTask(const TaskPtr& task)
@@ -99,7 +98,6 @@ template< class TaskT >
 void MemcachedConnection::onTaskDone(uint32_t task_id, int memcached_response_code)
 {
     TaskPtrMap::iterator it = running_tasks_.find(task_id);
-    assert(it != running_tasks_.end());
     if (it == running_tasks_.end()) 
     {
         LOG_ERROR << "task_id=" << task_id << " NOT FOUND, maybe timeout!";
@@ -131,7 +129,6 @@ void MemcachedConnection::onGetTaskDone(uint32_t task_id,
             int memcached_response_code, const std::string& return_value)
 {
     TaskPtrMap::iterator it = running_tasks_.find(task_id);
-    assert(it != running_tasks_.end());
     if (it == running_tasks_.end()) 
     {
         LOG_ERROR << "task_id=" << task_id << " NOT FOUND, maybe timeout!";
@@ -166,7 +163,6 @@ void MemcachedConnection::onMultiGetTaskOneResponse(uint32_t cmd_id,
             int memcached_response_code, const std::string& return_value)
 {
     TaskPtrMap::iterator it = mget_running_tasks_.find(cmd_id);
-    assert(it != mget_running_tasks_.end());
     if (it == mget_running_tasks_.end()) 
     {
         LOG_ERROR << "cmd_id=" << cmd_id << " NOT FOUND, maybe timeout!";
@@ -193,7 +189,6 @@ void MemcachedConnection::onMultiGetTaskOneResponse(uint32_t cmd_id,
 void MemcachedConnection::onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached_response_code)
 {
     TaskPtrMap::iterator it = mget_running_tasks_.find(noop_cmd_id);
-    assert(it != mget_running_tasks_.end());
     if (it == mget_running_tasks_.end()) 
     {
         LOG_ERROR << "cmd_id=" << noop_cmd_id << " NOT FOUND, maybe timeout!";

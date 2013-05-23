@@ -85,11 +85,11 @@ private:
                 {
                     std::string value(buf->peek() + sizeof(resp), resp.response.bodylen);
                     conn_->onMultiGetTaskOneResponse(id, resp.response.status, value);
-                    LOG_DEBUG << "GETQ, opaque=" << id << " value=" << value;
+                    //LOG_DEBUG << "GETQ, opaque=" << id << " value=" << value;
                 }
                 break;
             case PROTOCOL_BINARY_CMD_NOOP:
-                LOG_DEBUG << "GETQ, NOOP opaque=" << id;
+                //LOG_DEBUG << "GETQ, NOOP opaque=" << id;
                 conn_->onMultiGetTaskDone(id, resp.response.status);
                 break;
             default:
