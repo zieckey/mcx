@@ -12,6 +12,16 @@ namespace mcx
 namespace detail 
 {
 
+MemcachedConnection::MemcachedConnection(const std::string& srv_host, int listen_port)
+    : loop_(NULL), seqno_(0), host_(srv_host), port_(listen_port)
+{}
+
+MemcachedConnection::~MemcachedConnection()
+{
+    assert(running_tasks_.empty());
+    assert(mget_running_tasks_.empty());
+}
+
 bool MemcachedConnection::connect(EventLoop* loop) {
     loop_ = loop;
 
@@ -36,6 +46,7 @@ void MemcachedConnection::run(TaskPtr& task)
 {
     task->run(this);
     if (task->isMultiGet()) {
+        //insert task->id, and all the get-cmd-id, and also the last noop-cmd-id
         mget_running_tasks_[task->id()] = task;
             LOG_TRACE << "add multi-get id=" << task->id();
         MultiGetTask* mtask = static_cast<MultiGetTask*>(task.get());
@@ -196,20 +207,10 @@ void MemcachedConnection::onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached
     }
 
     loop_->cancel(it->second->getTimerId());
+    loop_->cancel(it->second->getTimerId());
 
     MultiGetTask* task = static_cast<MultiGetTask*>(it->second.get());
     assert(task->getNoopTaskId() == noop_cmd_id);
-    //switch (memcached_response_code) {
-    //    case PROTOCOL_BINARY_RESPONSE_SUCCESS:
-    //        task->onResult(cmd_id, return_value, Status(Status::kOK, memcached_response_code));
-    //        break;
-    //    case PROTOCOL_BINARY_RESPONSE_KEY_ENOENT:
-    //        task->onResult(cmd_id, return_value, Status(Status::kNotFound, memcached_response_code));
-    //        break;
-    //    default:
-    //        task->onResult(cmd_id, return_value, Status(Status::kNetworkError, memcached_response_code));
-    //        break;
-    //}
 
     for (uint32_t id = task->getFristGetTaskId(); id < task->getNoopTaskId(); ++id) {
         it = mget_running_tasks_.find(id);
@@ -218,9 +219,12 @@ void MemcachedConnection::onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached
         }
         task = static_cast<MultiGetTask*>(it->second.get());
         task->onResult(id, "", Status(Status::kNotFound, 0));
+        mget_running_tasks_.erase(it);//TODO optimize using map::erase(it++)
     }
 
     task->report();
+    mget_running_tasks_.erase(task->id());
+    mget_running_tasks_.erase(task->getNoopTaskId());
 }
 
 }//end of namespace detail 

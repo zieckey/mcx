@@ -32,9 +32,9 @@ class MemcachedConnection
     typedef std::map<uint32_t /*task_id*/, TaskPtr> TaskPtrMap;
 
   public:
-    MemcachedConnection(const std::string& srv_host, int listen_port)
-        : loop_(NULL), seqno_(0), host_(srv_host), port_(listen_port)
-    {}
+    MemcachedConnection(const std::string& srv_host, int listen_port);
+
+    ~MemcachedConnection();
 
     bool connect(EventLoop* loop);
 

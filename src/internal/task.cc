@@ -217,7 +217,9 @@ void MultiGetTask::run(MemcachedConnection* m) {
     first_get_id_ = noop_cmd_id_ - static_cast<uint32_t>(keys_.size());//FIXME overflow MAX_UINT32
 
     LOG_DEBUG << "noop.opaque=" << noop.message.header.request.opaque
-        << " noop_cmd_id_=" << noop_cmd_id_ << " first_get_id_=" << first_get_id_;
+        << " noop_cmd_id_=" << noop_cmd_id_ 
+        << " first_get_id_=" << first_get_id_ 
+        << " task_id=" << id();
 
     c->send(&buf);
 }

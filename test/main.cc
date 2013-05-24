@@ -54,6 +54,7 @@ void request(Memcached* m)
     m->store("abc1", "value-of-abc1", boost::bind(&onStoreDone, _1, _2, ++id));
     std::vector<std::string> keys;
     keys.push_back("abc");
+    keys.push_back("abc");
     keys.push_back("abc1");
     keys.push_back("hello");
     keys.push_back("abc2");
@@ -64,25 +65,11 @@ void request(Memcached* m)
     m->mget(keys, boost::bind(&onMultiGetDone, _1, ++id));
 }
 
-/*
-void done(curl::Request* c, int code)
-{
-  printf("done %p %s %d\n", c, c->getEffectiveUrl(), code);
-}
-
-void done2(curl::Request* c, int code)
-{
-  printf("done2 %p %s %d %d\n", c, c->getRedirectUrl(), c->getResponseCode(), code);
-  // g_loop->quit();
-}
-*/
-
-
 int main(int argc, char* argv[])
 {
     EventLoop loop;
     g_loop = &loop;
-    //loop.runAfter(30.0, boost::bind(&EventLoop::quit, &loop));
+    loop.runAfter(10.0, boost::bind(&EventLoop::quit, &loop));
 
     Memcached m("localhost", 15100);
     m.initialize(&loop);
