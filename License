@@ -1,6 +1,5 @@
 // 
-// asyncx-libmemcached - A reactor-based C++ memcached client library 
-// for Linux.
+// mcx - A reactor-based C++ memcached client library for Linux.
 //
 // Copyright (c) 2013, zieckey@gmail.com.  
 // All rights reserved.

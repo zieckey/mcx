@@ -7,7 +7,7 @@
 namespace mcx {
 
 class Status {
-public:
+  public:
     enum Code {
         kOK = 0,
         kNotFound = 1,
@@ -54,7 +54,7 @@ public:
         return e;
     }
 
-private:
+  private:
     Code code_;
     int  memcached_response_code_;
 };

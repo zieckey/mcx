@@ -1,5 +1,5 @@
-#ifndef XASYNC_MEMCACHED_H
-#define XASYNC_MEMCACHED_H
+#ifndef MCX_MEMCACHED_H
+#define MCX_MEMCACHED_H
 
 #include <string>
 #include <map>
@@ -24,7 +24,7 @@ namespace mcx
 class MemcachedImpl;
 
 class GetResult {
-public:
+  public:
     GetResult() {}
 
     GetResult(Status e, const std::string& v) 
@@ -36,7 +36,7 @@ public:
     Status& status() {  return status_; }
     std::string& value() { return value_; }
 
-private:
+  private:
     Status status_;
     std::string value_;
 };
@@ -58,7 +58,7 @@ typedef boost::function<
 
 class Memcached : public boost::noncopyable
 {
-public:
+  public:
     Memcached(const std::string& host, int port);
 
     ~Memcached();
@@ -79,17 +79,17 @@ public:
 
     //TODO add more interface
     
-public:
+  public:
     void setTimeout(int ms) { timeout_ms_ = ms;   }
     int  getTimeout() const { return timeout_ms_; }
 
-private:
+  private:
     boost::shared_ptr<MemcachedImpl> impl_;
     int timeout_ms_;
 };
 
 }
 
-#endif // #ifndef XASYNC_MEMCACHED_H
+#endif // #ifndef MCX_MEMCACHED_H
 
 

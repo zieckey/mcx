@@ -1,0 +1,11 @@
+mcx is a C++ memcached client library based on muduo.
+It runs on Linux with kernel version >= 2.6.28.
+
+https://github.com/zieckey/mcx.git
+
+Copyright (c) 2013, zieckey@gmail.com.  
+All rights reserved.
+
+Use of this source code is governed by a BSD-style
+license that can be found in the License file.
+
