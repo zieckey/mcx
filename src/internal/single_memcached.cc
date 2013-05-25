@@ -1,6 +1,10 @@
 #include "single_memcached.h"
+
+#include <boost/bind.hpp>
+
 #include "task.h"
 #include "memcached_connection.h"
+
 
 namespace mcx 
 {
@@ -32,6 +36,13 @@ struct TimeoutCallback {
     TaskPtr task_;
 };
 
+void SingleMemcached::runTask(TaskPtr& task)
+{
+    TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
+    task->setTimerId(tid);
+    conn_->run(task);
+}
+
 void SingleMemcached::store(
             const std::string& key, 
             const std::string& value,
@@ -39,10 +50,7 @@ void SingleMemcached::store(
 {
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
     TaskPtr task(new StoreTask(conn_->nextSeqNo(), key, value, vbucket_id, cb));
-    TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
-    task->setTimerId(tid);
-    conn_->run(task);
-    //TODO add a timer to handler timeout or other exception
+    loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 
 void SingleMemcached::remove(const std::string& key,
@@ -50,9 +58,7 @@ void SingleMemcached::remove(const std::string& key,
 {
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
     TaskPtr task(new RemoveTask(conn_->nextSeqNo(), key, vbucket_id, cb));
-    TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
-    task->setTimerId(tid);
-    conn_->run(task);
+    loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 
 void SingleMemcached::get(const std::string& key,
@@ -60,9 +66,7 @@ void SingleMemcached::get(const std::string& key,
 {
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
     TaskPtr task(new GetTask(conn_->nextSeqNo(), key, vbucket_id, cb));
-    TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
-    task->setTimerId(tid);
-    conn_->run(task);
+    loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 
 void SingleMemcached::mget(const std::vector<std::string>& keys,
@@ -77,10 +81,9 @@ void SingleMemcached::mget(const std::vector<std::string>& keys,
         key_entrys.push_back(e);
     }
     TaskPtr task(new MultiGetTask(conn_->nextSeqNo(), key_entrys, cb));
-    TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
-    task->setTimerId(tid);
-    conn_->run(task);
+    loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
+
 
 }//end of namespace detail 
 

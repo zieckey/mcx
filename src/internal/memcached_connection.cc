@@ -13,7 +13,7 @@ namespace detail
 {
 
 MemcachedConnection::MemcachedConnection(const std::string& srv_host, int listen_port)
-    : loop_(NULL), seqno_(0), host_(srv_host), port_(listen_port)
+    : loop_(NULL), host_(srv_host), port_(listen_port)
 {}
 
 MemcachedConnection::~MemcachedConnection()
@@ -42,6 +42,15 @@ bool MemcachedConnection::connect(EventLoop* loop) {
     return true;
 }
 
+void MemcachedConnection::rotateSeqNo()
+{
+    //reserve 65536 ids
+    static const int32_t kMaxSeqNo = 0x7fff0000;
+    if (seqno_.get() > kMaxSeqNo) {
+        seqno_.getAndSet(0);
+    }
+}
+
 void MemcachedConnection::run(TaskPtr& task)
 {
     task->run(this);
@@ -56,6 +65,8 @@ void MemcachedConnection::run(TaskPtr& task)
     } else { 
         running_tasks_[task->id()] = task;
     }
+
+    rotateSeqNo();
 }
 
 void MemcachedConnection::cancelTask(const TaskPtr& task)

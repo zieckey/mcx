@@ -17,10 +17,12 @@ namespace mcx
 namespace detail 
 {
 
+
 using namespace muduo;
 using namespace muduo::net;
 
 class MemcachedConnection;
+class Task;
 
 class SingleMemcached : public MemcachedImpl
 {
@@ -43,6 +45,9 @@ public:
     virtual void mget(const std::vector<std::string>& keys,
               const MultiGetCallback& cb);
     
+private:
+    void runTask(boost::shared_ptr<Task>& task);
+
 private:
     typedef boost::shared_ptr<TcpClient> TcpClientPtr;
 

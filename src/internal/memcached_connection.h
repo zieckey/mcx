@@ -40,7 +40,7 @@ class MemcachedConnection
 
     /// get next seqno
     uint32_t nextSeqNo() {
-        return seqno_++;
+        return seqno_.getAndAdd(1);
     }
 
     void run(TaskPtr& task);
@@ -73,10 +73,12 @@ class MemcachedConnection
   private:
     void onConnection(const TcpConnectionPtr& conn);
 
+    void rotateSeqNo();
+
   private:
     EventLoop*      loop_;
     TcpClientPtr    tcp_client_;
-    uint32_t        seqno_; //the sequence number
+    AtomicInt32     seqno_; //the sequence number
 
     std::string     host_;
     int             port_;
