@@ -13,6 +13,9 @@ EventLoop* g_loop = NULL;
 void onGetDone(const std::string& key, const GetResult& result, int id)
 {
     LOG_INFO << "onGetDone: id=" << id << " key=" << key << " value=[" << result.value() << "] status=[" << result.status().toString() << "]";
+    if (key == "abc") {
+        assert(result.value() == "value-of-abc");
+    }
 }
 
 void onMultiGetDone(const MultiGetResult& result, int id)
@@ -24,6 +27,9 @@ void onMultiGetDone(const MultiGetResult& result, int id)
             << " key=" << it->first 
             << " value=[" << it->second.value() << "]" 
             << " status=[" << it->second.status().toString() << "]";
+        if (it->first == "abc") {
+            assert(it->second.value() == "value-of-abc");
+        }
     }
 }
 
@@ -40,17 +46,17 @@ void onRemoveDone(const std::string& key, const Status& status, int id)
 void request(Memcached* m)
 {
     int id = 0;
-    m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
+    m->store("abc", "value-of-abc", boost::bind(&onStoreDone, _1, _2, ++id));
     m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
     m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
     m->remove("hello", boost::bind(&onRemoveDone, _1, _2, ++id));
+    m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
     m->store("hello", "value-of-hello", boost::bind(&onStoreDone, _1, _2, ++id));
     m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
     m->remove("hello", boost::bind(&onRemoveDone, _1, _2, ++id));
     m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
 
     m->store("hello", "value-of-hello", boost::bind(&onStoreDone, _1, _2, ++id));
-    m->store("abc", "value-of-abc", boost::bind(&onStoreDone, _1, _2, ++id));
     m->store("abc1", "value-of-abc1", boost::bind(&onStoreDone, _1, _2, ++id));
     std::vector<std::string> keys;
     keys.push_back("abc");
@@ -78,5 +84,6 @@ int main(int argc, char* argv[])
     loop.runAfter(1, boost::bind(&request, &m));
 
     loop.loop();
+    LOG_INFO << "exiting ...";
 }
 

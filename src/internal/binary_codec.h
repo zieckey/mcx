@@ -77,13 +77,15 @@ private:
                 break;
             case PROTOCOL_BINARY_CMD_GET:
                 {
-                    std::string value(buf->peek() + sizeof(resp), resp.response.bodylen);
+                    const char* pv = buf->peek() + sizeof(resp) + resp.response.extlen;
+                    std::string value(pv, resp.response.bodylen - resp.response.extlen);
                     conn_->onGetTaskDone(id, resp.response.status, value);
                 }
                 break;
             case PROTOCOL_BINARY_CMD_GETQ:
                 {
-                    std::string value(buf->peek() + sizeof(resp), resp.response.bodylen);
+                    const char* pv = buf->peek() + sizeof(resp) + resp.response.extlen;
+                    std::string value(pv, resp.response.bodylen - resp.response.extlen);
                     conn_->onMultiGetTaskOneResponse(id, resp.response.status, value);
                     //LOG_DEBUG << "GETQ, opaque=" << id << " value=" << value;
                 }
