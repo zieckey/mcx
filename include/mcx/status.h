@@ -1,5 +1,5 @@
-#ifndef LIBMEMCACHED_MCX_STATUS_H__
-#define LIBMEMCACHED_MCX_STATUS_H__
+#ifndef MCX_STATUS_H__
+#define MCX_STATUS_H__
 
 #include <stdio.h>
 #include <string>
@@ -59,6 +59,6 @@ class Status {
     int  memcached_response_code_;
 };
 
-} // namespace symc
+} // namespace mcx
 
-#endif // __SYMC_ERROR_H__
+#endif // 
