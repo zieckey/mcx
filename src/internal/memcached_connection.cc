@@ -153,7 +153,7 @@ void MemcachedConnection::onGetTaskDone(uint32_t task_id,
     TaskPtrMap::iterator it = running_tasks_.find(task_id);
     if (it == running_tasks_.end()) 
     {
-        LOG_ERROR << "task_id=" << task_id << " NOT FOUND, maybe timeout!";
+        //LOG_ERROR << "task_id=" << task_id << " NOT FOUND, maybe timeout!";
         return;
     }
 
