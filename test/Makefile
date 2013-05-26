@@ -17,25 +17,19 @@ CFLAGS=$(TOP_CFLAGS) -g -c -fPIC \
 CPPFLAGS=$(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords 
 LDFLAGS=-L/usr/local/lib ../src/libmcx.a ../3rdparty/build/debug/lib/libmuduo_net.a ../3rdparty/build/debug/lib/libmuduo_base.a -lpthread 
 
+
+
 SRCS := $(wildcard *.cc)
-OBJS := $(patsubst %.cc, .obj/%.o, $(SRCS))
-DEPS := $(patsubst .obj/%.o, .obj/%.d, $(OBJS))
+OBJS := $(patsubst %.cc, %.o, $(SRCS))
+DEPS := $(patsubst %.o, %.d, $(OBJS))
+PROGRAM := $(patsubst %.o, %, $(OBJS))
 
-TARGET=mcx
+all: prepare $(OBJS) $(PROGRAM)
 
-all : prepare $(TARGET) 
-	$(MAKE) install
-
-check : prepare $(TARGET)
-	./$(TARGET)
-
-$(TARGET) : $(OBJS) ../src/libmcx.a
-	$(CXX) $(OBJS) $(LDFLAGS) -o $@
+% : %.o
+	$(CXX) $^ $(RTFLAGS) $(LDFLAGS) -o $@
 
 -include $(DEPS)
-
-.obj/%.o : %.cc
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 prepare : 
 	$(MAKE) -C ../src

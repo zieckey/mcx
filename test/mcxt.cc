@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     Memcached m("localhost", 15100);
     m.initialize(&loop);
-    m.setTimeout(3);
+    m.setTimeout(300);
 
     loop.runAfter(1, boost::bind(&request, &m));
 
