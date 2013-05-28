@@ -50,7 +50,6 @@ private:
 
 private:
     typedef boost::shared_ptr<TcpClient> TcpClientPtr;
-
     typedef boost::shared_ptr<MemcachedConnection> MemcachedConnectionPtr;
 
 private:

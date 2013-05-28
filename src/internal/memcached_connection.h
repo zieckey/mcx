@@ -8,6 +8,7 @@
 #include <muduo/net/EventLoop.h>
 
 #include "../memcached.h"
+#include "task.h"
 
 namespace mcx
 {
@@ -17,13 +18,7 @@ namespace detail
 using namespace muduo;
 using namespace muduo::net;
 
-class Task;
-class MultiGetTask;
-
 class BinaryCodec;
-
-typedef boost::shared_ptr<Task> TaskPtr;
-typedef boost::shared_ptr<MultiGetTask> MultiGetTaskPtr;
 
 class MemcachedConnection
 {

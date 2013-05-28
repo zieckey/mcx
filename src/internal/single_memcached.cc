@@ -39,6 +39,7 @@ struct TimeoutCallback {
 
 void SingleMemcached::runTask(TaskPtr& task)
 {
+    //TODO fix perfermance problem
     TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
     task->setTimerId(tid);
     conn_->run(task);

@@ -141,7 +141,8 @@ void GetTask::run(MemcachedConnection* m) {
     
     TcpConnectionPtr c = m->tcp_client()->connection();
     if (!c) {
-        LOG_WARN << m->host() << ":" << m->port() << " NOT CONNECTED!";
+        LOG_WARN << "task_id=" << id() << " " 
+            << m->host() << ":" << m->port() << " NOT CONNECTED!";
         //Status s(Status::kNetworkError, -1);
         //report(GetResult(s,""));
         return;

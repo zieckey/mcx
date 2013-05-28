@@ -4,7 +4,6 @@
 
 #include <muduo/base/Logging.h>
 #include <muduo/net/InetAddress.h>
-#include "task.h"
 #include "binary_codec.h"
 
 namespace mcx 
@@ -56,6 +55,7 @@ void MemcachedConnection::run(TaskPtr& task)
 {
     task->run(this);
     running_tasks_.push(task);
+    assert(running_tasks_.back());
     rotateSeqNo();
 }
 
@@ -201,13 +201,15 @@ void MemcachedConnection::onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached
 
 TaskPtr MemcachedConnection::peekTask(uint32_t task_id) 
 {
-    for (TaskPtr task;!running_tasks_.empty();running_tasks_.pop())
+    for (TaskPtr task; !running_tasks_.empty();)
     {
+        assert(!running_tasks_.empty());
         task = running_tasks_.front();
+        assert(task);
         if (task->id() == task_id) {
             return task;
         } else if (task->id() > task_id) {
-            LOG_WARN << "error task_id=" << task_id << " Not found in requesting queue";
+            LOG_WARN << "NOT find task_id=" << task_id << " front taskid=" << task->id();
             return TaskPtr();
         }
 
@@ -217,7 +219,9 @@ TaskPtr MemcachedConnection::peekTask(uint32_t task_id)
             }
         }
 
+        loop_->cancel(task->getTimerId());
         task->onTimeout();
+        running_tasks_.pop();
     }
 
     return TaskPtr();

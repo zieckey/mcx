@@ -152,9 +152,6 @@ private:
 };
 
 typedef boost::shared_ptr<Task>         TaskPtr;
-typedef boost::shared_ptr<MultiGetTask> MultiGetTaskPtr;
-
-
 
 } // namespace detail 
 } // namespace mcx 

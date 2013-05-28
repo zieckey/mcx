@@ -34,7 +34,7 @@ Stat g_stat;
 
 void onGetDone(const std::string& key, const GetResult& result, int id)
 {
-    //LOG_INFO << "onGetDone: id=" << id << " key=" << key << " value=[" << result.value() << "] status=[" << result.status().toString() << "]";
+    LOG_TRACE << "onGetDone: id=" << id << " key=" << key << " value=[" << result.value() << "] status=[" << result.status().toString() << "]";
     //if (key == "abc") {
     //    assert(result.value() == "value-of-abc");
     //}
@@ -93,12 +93,13 @@ int main(int argc, char* argv[])
     Thread thread(boost::bind(&request, &latch), "request");
     thread.start();
     latch.wait();
+    sleep(1);
     g_loop->runEvery(1.0, boost::bind(&Stat::print, &g_stat));
     Memcached* m = g_mc;
     for (int i = 0; ; i++) {
         char buf[12] = {};
         snprintf(buf, sizeof(buf), "%d", i);
-        m->get(buf, boost::bind(&onGetDone, _1, _2, ++i));
+        m->get(buf, boost::bind(&onGetDone, _1, _2, i));
         g_stat.requesting.increment();
         if (g_stat.requesting.get() > g_stat.done_ok.get() + g_stat.done_failed.get() + 5000) {
             usleep(10);
