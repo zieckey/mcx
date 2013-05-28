@@ -7,7 +7,7 @@ ARFLAGS=cru
 CURRENT_DIR=$(shell echo `pwd`)
 PARENT_DIRNAME=$(shell basename $(shell dirname $(CURRENT_DIR)))
 SOURCE_DIR=$(CURRENT_DIR)
-CFLAGS=$(TOP_CFLAGS) -g -c -fPIC \
+CFLAGS= -g -c -fPIC \
 	   -Wshadow -Wcast-qual -Wcast-align \
 	   -Wwrite-strings -Wsign-compare \
 	   -Winvalid-pch -fms-extensions -Wall \
@@ -30,7 +30,7 @@ all: prepare $(OBJS) $(PROGRAM)
 	$(CXX) $^ $(RTFLAGS) $(LDFLAGS) -o $@
 
 .obj/%.o : %.cc
-	$(CXX) $^ $(CPPFLAGS) -o $@
+	$(CXX) $< $(CPPFLAGS) -o $@
 
 -include $(DEPS)
 

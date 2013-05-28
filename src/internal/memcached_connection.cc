@@ -201,7 +201,7 @@ void MemcachedConnection::onMultiGetTaskDone(uint32_t noop_cmd_id, int memcached
 
 TaskPtr MemcachedConnection::peekTask(uint32_t task_id) 
 {
-    for (TaskPtr task;;)
+    for (TaskPtr task;!running_tasks_.empty();running_tasks_.pop())
     {
         task = running_tasks_.front();
         if (task->id() == task_id) {
@@ -218,7 +218,6 @@ TaskPtr MemcachedConnection::peekTask(uint32_t task_id)
         }
 
         task->onTimeout();
-        running_tasks_.pop();
     }
 
     return TaskPtr();

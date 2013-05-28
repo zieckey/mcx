@@ -29,7 +29,7 @@ void onMultiGetDone(const MultiGetResult& result, int id)
             << " value=[" << it->second.value() << "]" 
             << " status=[" << it->second.status().toString() << "]";
         if (it->first == "abc") {
-            assert(it->second.value() == "value-of-abc");
+            assert(it->second.value() == "value-of-abc" || it->second.status().isTimedOut());
         }
     }
 }
@@ -47,15 +47,28 @@ void onRemoveDone(const std::string& key, const Status& status, int id)
 void request(Memcached* m)
 {
     int id = 0;
+    std::string largevalue(1024*1024, 'c');
+    m->store("newkey", largevalue, boost::bind(&onStoreDone, _1, _2, ++id));
+    usleep(10000);
+    m->get("newkey", boost::bind(&onGetDone, _1, _2, ++id));
     m->store("abc", "value-of-abc", boost::bind(&onStoreDone, _1, _2, ++id));
+    usleep(10000);
     m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
+    usleep(10000);
     m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
+    usleep(10000);
     m->remove("hello", boost::bind(&onRemoveDone, _1, _2, ++id));
+    usleep(10000);
     m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
+    usleep(10000);
     m->store("hello", "value-of-hello", boost::bind(&onStoreDone, _1, _2, ++id));
+    usleep(10000);
     m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
+    usleep(10000);
     m->remove("hello", boost::bind(&onRemoveDone, _1, _2, ++id));
+    usleep(10000);
     m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
+    usleep(10000);
 
     m->store("hello", "value-of-hello", boost::bind(&onStoreDone, _1, _2, ++id));
     m->store("abc1", "value-of-abc1", boost::bind(&onStoreDone, _1, _2, ++id));

@@ -27,6 +27,7 @@ struct TimeoutCallback {
     TimeoutCallback(MemcachedConnection* conn, TaskPtr& task) : conn_(conn), task_(task) {}
 
     void operator()() const {
+        LOG_DEBUG << "task_id=" << task_->id() << " timed out!";
         task_->onTimeout();
         conn_->cancelTask(task_);
     }
