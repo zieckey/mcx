@@ -80,12 +80,12 @@ class Memcached : public boost::noncopyable
     //TODO add more interface
     
   public:
-    void setTimeout(int ms) { timeout_ms_ = ms;   }
-    int  getTimeout() const { return timeout_ms_; }
+    void  setTimeout(float ms) { timeout_ms_ = ms;   }
+    float getTimeout() const { return timeout_ms_; }
 
   private:
     boost::shared_ptr<MemcachedImpl> impl_;
-    int timeout_ms_;
+    float timeout_ms_;
 };
 
 }

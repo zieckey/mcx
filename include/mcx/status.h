@@ -2,7 +2,9 @@
 #define MCX_STATUS_H__
 
 #include <stdio.h>
+#include <assert.h>
 #include <string>
+
 
 namespace mcx {
 

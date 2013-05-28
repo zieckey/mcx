@@ -20,14 +20,17 @@ LDFLAGS=-L/usr/local/lib ../src/libmcx.a ../3rdparty/build/debug/lib/libmuduo_ne
 
 
 SRCS := $(wildcard *.cc)
-OBJS := $(patsubst %.cc, %.o, $(SRCS))
+OBJS := $(patsubst %.cc, .obj/%.o, $(SRCS))
 DEPS := $(patsubst %.o, %.d, $(OBJS))
-PROGRAM := $(patsubst %.o, %, $(OBJS))
+PROGRAM := $(patsubst .obj/%.o, %, $(OBJS))
 
 all: prepare $(OBJS) $(PROGRAM)
 
-% : %.o
+% : .obj/%.o ../src/libmcx.a
 	$(CXX) $^ $(RTFLAGS) $(LDFLAGS) -o $@
+
+.obj/%.o : %.cc
+	$(CXX) $^ $(CPPFLAGS) -o $@
 
 -include $(DEPS)
 
@@ -35,9 +38,6 @@ prepare :
 	$(MAKE) -C ../src
 	@mkdir -p .obj
 
-install: $(TARGET) 
-#	cp -f $(TARGET) $(PREFIX)/bin
-
 clean:
-	rm -rf *.o *.d $(OBJS) $(DEPS) $(TARGET) 
+	rm -rf *.o *.d $(OBJS) $(DEPS) $(PROGRAM)
 

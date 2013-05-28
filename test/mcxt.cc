@@ -14,8 +14,9 @@ void onGetDone(const std::string& key, const GetResult& result, int id)
 {
     LOG_INFO << "onGetDone: id=" << id << " key=" << key << " value=[" << result.value() << "] status=[" << result.status().toString() << "]";
     if (key == "abc") {
-        assert(result.value() == "value-of-abc");
+        assert(result.value() == "value-of-abc" || result.status().isTimedOut());
     }
+
 }
 
 void onMultiGetDone(const MultiGetResult& result, int id)
@@ -75,11 +76,11 @@ int main(int argc, char* argv[])
 {
     EventLoop loop;
     g_loop = &loop;
-    loop.runAfter(10.0, boost::bind(&EventLoop::quit, &loop));
+    loop.runAfter(7.0, boost::bind(&EventLoop::quit, &loop));
 
-    Memcached m("localhost", 15100);
+    Memcached m("10.16.29.21", 11211);
     m.initialize(&loop);
-    m.setTimeout(300);
+    m.setTimeout(0.1);
 
     loop.runAfter(1, boost::bind(&request, &m));
 

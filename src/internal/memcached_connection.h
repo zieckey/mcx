@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <queue>
 #include <muduo/net/TcpClient.h>
 #include <muduo/net/EventLoop.h>
 
@@ -30,6 +31,7 @@ class MemcachedConnection
     typedef boost::shared_ptr<TcpClient>   TcpClientPtr;
     typedef boost::shared_ptr<BinaryCodec> BinaryCodecPtr;
     typedef std::map<uint32_t /*task_id*/, TaskPtr> TaskPtrMap;
+    typedef std::queue<TaskPtr> TaskPtrQueue;
 
   public:
     MemcachedConnection(const std::string& srv_host, int listen_port);
@@ -70,6 +72,9 @@ class MemcachedConnection
  
     void removeTask(const TaskPtr& task);
 
+    //pop timeout task, and peek the right task (it is also in the queue)
+    TaskPtr peekTask(uint32_t task_id);
+
   private:
     void onConnection(const TcpConnectionPtr& conn);
 
@@ -83,9 +88,7 @@ class MemcachedConnection
     std::string     host_;
     int             port_;
 
-    TaskPtrMap      running_tasks_;
-
-    TaskPtrMap      mget_running_tasks_;//multi-get running tasks
+    TaskPtrQueue    running_tasks_;
 
     BinaryCodecPtr  codec_;
 };

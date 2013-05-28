@@ -7,3 +7,10 @@ src/libmcx.a
 src/libmcx.so
 test/mcx
 test/.obj
+test/a.txt
+test/mcxt
+test/mcxt.d
+test/mcxt.o
+test/multithread
+test/multithread.d
+test/multithread.o
