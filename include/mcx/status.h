@@ -20,6 +20,8 @@ class Status {
     };
 
     Status() : code_(kOK), memcached_response_code_(0) { }
+    Status(Code ec) 
+        : code_(ec), memcached_response_code_(0) { }
     Status(Code ec, int mc_code) 
         : code_(ec), memcached_response_code_(mc_code) { }
 

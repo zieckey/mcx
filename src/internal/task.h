@@ -29,7 +29,9 @@ public:
 public:
     Task(Type t, uint32_t _id) : type_(t), id_(_id) {}
 
+    void setId(uint32_t k) { id_ = k;   }
     uint32_t id() const { return id_;   }
+
     Type   type() const { return type_; }
 
     bool isMultiGet() const { return type_ == kMultiGet; }

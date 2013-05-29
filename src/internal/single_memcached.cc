@@ -39,10 +39,17 @@ struct TimeoutCallback {
 
 void SingleMemcached::runTask(TaskPtr& task)
 {
-    //TODO fix perfermance problem
+    task->setId(conn_->nextSeqNo());
     TimerId tid = loop_->runAfter(double(parent()->getTimeout())/1000, TimeoutCallback(conn_.get(), task)); 
     task->setTimerId(tid);
     conn_->run(task);
+
+    //FIXME fix tow times of timeout time
+    if (last_task_) {
+        loop_->cancel(last_task_->getTimerId());
+        last_task_->setTimerId(TimerId(NULL,0));
+    }
+    last_task_ = task;
 }
 
 void SingleMemcached::store(
@@ -51,7 +58,7 @@ void SingleMemcached::store(
             const StoreCallback& cb)
 {
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
-    TaskPtr task(new StoreTask(conn_->nextSeqNo(), key, value, vbucket_id, cb));
+    TaskPtr task(new StoreTask(0, key, value, vbucket_id, cb));
     loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 
@@ -59,7 +66,7 @@ void SingleMemcached::remove(const std::string& key,
             const RemoveCallback& cb)
 {
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
-    TaskPtr task(new RemoveTask(conn_->nextSeqNo(), key, vbucket_id, cb));
+    TaskPtr task(new RemoveTask(0, key, vbucket_id, cb));
     loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 
@@ -67,7 +74,7 @@ void SingleMemcached::get(const std::string& key,
             const GetCallback& cb)
 {
     uint16_t vbucket_id = 0;//TODO calculate vbucket id
-    TaskPtr task(new GetTask(conn_->nextSeqNo(), key, vbucket_id, cb));
+    TaskPtr task(new GetTask(0, key, vbucket_id, cb));
     loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 
@@ -82,7 +89,7 @@ void SingleMemcached::mget(const std::vector<std::string>& keys,
         KeyEntry e(*it, vbucket_id);
         key_entrys.push_back(e);
     }
-    TaskPtr task(new MultiGetTask(conn_->nextSeqNo(), key_entrys, cb));
+    TaskPtr task(new MultiGetTask(0, key_entrys, cb));
     loop_->runInLoop(boost::bind(&SingleMemcached::runTask, this, task));
 }
 

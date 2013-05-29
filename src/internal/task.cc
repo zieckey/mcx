@@ -204,6 +204,8 @@ void MultiGetTask::run(MemcachedConnection* m) {
 
         buf.append(req.bytes, sizeof(req.bytes) - 4);
         buf.append(key.data(), key.size());
+
+        LOG_TRACE << "MultiGet opaque id=" << int(req.message.header.request.opaque);
     }
 
     protocol_binary_request_noop noop;
@@ -217,7 +219,7 @@ void MultiGetTask::run(MemcachedConnection* m) {
     noop_cmd_id_  = noop.message.header.request.opaque;
     first_get_id_ = noop_cmd_id_ - static_cast<uint32_t>(keys_.size());//FIXME overflow MAX_UINT32
 
-    LOG_DEBUG << "noop.opaque=" << noop.message.header.request.opaque
+    LOG_TRACE << "MultiGet noop.opaque=" << noop.message.header.request.opaque
         << " noop_cmd_id_=" << noop_cmd_id_ 
         << " first_get_id_=" << first_get_id_ 
         << " task_id=" << id();

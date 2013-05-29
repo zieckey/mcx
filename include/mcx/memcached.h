@@ -20,8 +20,6 @@ namespace muduo {
 namespace mcx 
 {
 
-//forward declear the implement of memcached
-class MemcachedImpl;
 
 class GetResult {
   public:
@@ -55,6 +53,9 @@ typedef boost::function<
 typedef boost::function<
             void(const MultiGetResult& results)
                 > MultiGetCallback;
+
+//forward declear the implement of memcached
+class MemcachedImpl;
 
 class Memcached : public boost::noncopyable
 {

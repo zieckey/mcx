@@ -19,14 +19,16 @@ struct Stat
 {
     AtomicInt32 requesting;
     AtomicInt32 done_ok;
+    AtomicInt32 not_found;
     AtomicInt32 done_failed;
 
     void print()
     {
         LOG_INFO
-            << "\n requesting=" << requesting.get() 
-            << "\n    done_ok=" << done_ok.get()
-            << "\ndone_failed=" << done_failed.get();
+            << " requesting=" << requesting.get() 
+            << " done_ok=" << done_ok.get()
+            << " not_found=" << not_found.get()
+            << " done_failed=" << done_failed.get();
     }
 };
 
@@ -41,8 +43,12 @@ void onGetDone(const std::string& key, const GetResult& result, int id)
 
     if (result.status().ok() || result.status().isNotFound()) {
         g_stat.done_ok.increment();
+        if (result.status().isNotFound()) {
+            g_stat.not_found.increment();
+        }
     } else {
         g_stat.done_failed.increment();
+        LOG_ERROR << "onGetDone: id=" << id << " key=" << key << " value=[" << result.value() << "] status=[" << result.status().toString() << "]";
     }
 }
 
@@ -51,19 +57,28 @@ void onMultiGetDone(const MultiGetResult& result, int id)
     MultiGetResult::const_iterator it (result.begin());
     MultiGetResult::const_iterator ite(result.end());
     for (; it != ite; ++it) {
-        LOG_INFO << __func__ << ": id=" << id 
+        LOG_TRACE << __func__ << ": id=" << id 
             << " key=" << it->first 
             << " value=[" << it->second.value() << "]" 
             << " status=[" << it->second.status().toString() << "]";
-        if (it->first == "abc") {
-            assert(it->second.value() == "value-of-abc");
+
+        if (it->second.status().ok()) {
+            assert(it->second.value() == it->first);
+        } else {
+            LOG_ERROR << "onMultiGetDone: id=" << id << " key=" << it->first << " status=[" << it->second.status().toString() << "]";
         }
     }
 }
 
 void onStoreDone(const std::string& key, const Status& status, int id)
 {
-    LOG_INFO << "onStoreDone: id=" << id << " key=" << key << " status=[" << status.toString() << "]";
+    LOG_TRACE << "onStoreDone: id=" << id << " key=" << key << " status=[" << status.toString() << "]";
+
+    if (status.ok() || status.isNotFound()) {
+        g_stat.done_ok.increment();
+    } else {
+        LOG_ERROR << "onStoreDone: id=" << id << " key=" << key << " status=[" << status.toString() << "]";
+    }
 }
 
 void onRemoveDone(const std::string& key, const Status& status, int id)
@@ -87,8 +102,16 @@ void request(CountDownLatch* latch)
     g_loop = NULL;
 }
 
+std::string toString(int i) 
+{
+    char buf[12] = {};
+    snprintf(buf, sizeof(buf), "%d", i);
+    return buf;
+}
+
 int main(int argc, char* argv[])
 {
+    int batch_count = 5;
     CountDownLatch latch(1);
     Thread thread(boost::bind(&request, &latch), "request");
     thread.start();
@@ -96,17 +119,29 @@ int main(int argc, char* argv[])
     sleep(1);
     g_loop->runEvery(1.0, boost::bind(&Stat::print, &g_stat));
     Memcached* m = g_mc;
-    for (int i = 0; ; i++) {
-        char buf[12] = {};
-        snprintf(buf, sizeof(buf), "%d", i);
-        m->get(buf, boost::bind(&onGetDone, _1, _2, i));
+    std::vector<std::string> keys;
+    for (int i = 0; ; ) {
+    char buf[12] = {};
+    snprintf(buf, sizeof(buf), "%d", i);
+        m->store(buf, buf, boost::bind(&onStoreDone, _1, _2, i++));
+        //i++;
+        //keys.clear();
+    //    m->store(toString(i), toString(i), boost::bind(&onStoreDone, _1, _2, i));
+        //for (int j = 0; j < batch_count; ++j) {
+        //    if (i - j >= 0) {
+        //        keys.push_back(toString(i-j));
+        //    }
+        //}
+        //m->mget(keys, boost::bind(&onMultiGetDone, _1, i++));
+        //m->get(toString(i), boost::bind(&onGetDone, _1, _2, i++));
         g_stat.requesting.increment();
-        if (g_stat.requesting.get() > g_stat.done_ok.get() + g_stat.done_failed.get() + 5000) {
+        if (g_stat.requesting.get() > g_stat.done_ok.get() + g_stat.done_failed.get() + 10000) {
             usleep(10);
         }
     }
     LOG_INFO << "do request ...";
     sleep(10);
     LOG_INFO << "exiting ...";
+    return 0;
 }
 

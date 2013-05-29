@@ -53,8 +53,9 @@ private:
     typedef boost::shared_ptr<MemcachedConnection> MemcachedConnectionPtr;
 
 private:
-    EventLoop*             loop_;
-    MemcachedConnectionPtr conn_;
+    EventLoop*              loop_;
+    MemcachedConnectionPtr  conn_;
+    boost::shared_ptr<Task> last_task_;
 };
 
 }//end of namespace detail 

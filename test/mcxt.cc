@@ -48,40 +48,41 @@ void request(Memcached* m)
 {
     int id = 0;
     std::string largevalue(1024*1024, 'c');
-    m->store("newkey", largevalue, boost::bind(&onStoreDone, _1, _2, ++id));
+    m->store("ccc", largevalue, boost::bind(&onStoreDone, _1, _2, ++id));
     usleep(10000);
-    m->get("newkey", boost::bind(&onGetDone, _1, _2, ++id));
+    m->get("ccc", boost::bind(&onGetDone, _1, _2, ++id));
     m->store("abc", "value-of-abc", boost::bind(&onStoreDone, _1, _2, ++id));
     usleep(10000);
     m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
     usleep(10000);
     m->get("abc", boost::bind(&onGetDone, _1, _2, ++id));
     usleep(10000);
-    m->remove("hello", boost::bind(&onRemoveDone, _1, _2, ++id));
+    m->remove("ddd", boost::bind(&onRemoveDone, _1, _2, ++id));
     usleep(10000);
-    m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
+    m->get("ddd", boost::bind(&onGetDone, _1, _2, ++id));
     usleep(10000);
-    m->store("hello", "value-of-hello", boost::bind(&onStoreDone, _1, _2, ++id));
+    m->store("ddd", "value-of-ddd", boost::bind(&onStoreDone, _1, _2, ++id));
     usleep(10000);
-    m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
+    m->get("ddd", boost::bind(&onGetDone, _1, _2, ++id));
     usleep(10000);
-    m->remove("hello", boost::bind(&onRemoveDone, _1, _2, ++id));
+    m->remove("ddd", boost::bind(&onRemoveDone, _1, _2, ++id));
     usleep(10000);
-    m->get("hello", boost::bind(&onGetDone, _1, _2, ++id));
+    m->get("ddd", boost::bind(&onGetDone, _1, _2, ++id));
     usleep(10000);
 
-    m->store("hello", "value-of-hello", boost::bind(&onStoreDone, _1, _2, ++id));
+    m->store("ddd", "value-of-ddd", boost::bind(&onStoreDone, _1, _2, ++id));
     m->store("abc1", "value-of-abc1", boost::bind(&onStoreDone, _1, _2, ++id));
     std::vector<std::string> keys;
     keys.push_back("abc");
     keys.push_back("abc");
     keys.push_back("abc1");
-    keys.push_back("hello");
+    keys.push_back("ddd");
     keys.push_back("abc2");
-    keys.push_back("hello");
-    keys.push_back("hello1");
-    keys.push_back("hello2");
+    keys.push_back("ddd");
+    keys.push_back("ddd1");
+    keys.push_back("ddd2");
     keys.push_back("abc2");
+    m->mget(keys, boost::bind(&onMultiGetDone, _1, ++id));
     m->mget(keys, boost::bind(&onMultiGetDone, _1, ++id));
 }
 
@@ -93,7 +94,7 @@ int main(int argc, char* argv[])
 
     Memcached m("10.16.29.21", 11211);
     m.initialize(&loop);
-    m.setTimeout(0.1);
+    m.setTimeout(100);
 
     loop.runAfter(1, boost::bind(&request, &m));
 
