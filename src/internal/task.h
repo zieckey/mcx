@@ -127,6 +127,8 @@ public:
                  const std::vector<KeyEntry>& keys,
                  const MultiGetCallback& handler);
 
+    //TODO optimize std::vector<KeyEntry>& keys copy problem
+
     virtual void run(MemcachedConnection* m);
     virtual void onTimeout();
 
