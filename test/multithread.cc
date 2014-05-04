@@ -32,7 +32,7 @@ struct Stat
     }
 };
 
-Stat g_stat;
+static Stat g_stat;
 
 void onGetDone(const std::string& key, const GetResult& result, int id)
 {
@@ -111,6 +111,11 @@ std::string toString(int i)
 
 int main(int argc, char* argv[])
 {
+    bool test_get   = true;
+    bool test_store = true;
+    bool test_mget  = false;
+    //TODO getopt
+    
     int batch_count = 5;(void)batch_count;
     CountDownLatch latch(1);
     Thread thread(boost::bind(&request, &latch), "mc-request-th");
@@ -121,19 +126,22 @@ int main(int argc, char* argv[])
     Memcached* m = g_mc;
     std::vector<std::string> keys;
     for (int i = 0; ; ) {
-        char buf[12] = {};
-        snprintf(buf, sizeof(buf), "%d", i);
-        //m->store(buf, buf, boost::bind(&onStoreDone, _1, _2, i++));
-        //i++;
-        //keys.clear();
-        //    m->store(toString(i), toString(i), boost::bind(&onStoreDone, _1, _2, i));
-        //for (int j = 0; j < batch_count; ++j) {
-        //    if (i - j >= 0) {
-        //        keys.push_back(toString(i-j));
-        //    }
-        //}
-        //m->mget(keys, boost::bind(&onMultiGetDone, _1, i++));
-        m->get(toString(i), boost::bind(&onGetDone, _1, _2, i));
+        std::string index = toString(i);
+        if (test_store) {
+            m->store(index, index, boost::bind(&onStoreDone, _1, _2, i));
+        }
+        if (test_mget) {
+            keys.clear();
+            for (int j = 0; j < batch_count; ++j) {
+                if (i - j >= 0) {
+                    keys.push_back(toString(i-j));
+                }
+            }
+        }
+        m->mget(keys, boost::bind(&onMultiGetDone, _1, i++));
+        if (test_get) {
+            m->get(index, boost::bind(&onGetDone, _1, _2, i));
+        }
         i++;
         g_stat.requesting.increment();
         if (g_stat.requesting.get() > g_stat.done_ok.get() + g_stat.done_failed.get() + 30000) {
