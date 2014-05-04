@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <queue>
+#include <muduo/base/Atomic.h>
 #include <muduo/net/TcpClient.h>
 #include <muduo/net/EventLoop.h>
 

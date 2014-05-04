@@ -15,7 +15,7 @@ CFLAGS=$(TOP_CFLAGS) -g -c -fPIC \
 	   -I ../3rdparty/muduo \
 	   -I/usr/local/include  -MMD
 CPPFLAGS= $(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords
-LDFLAGS=$(TOP_LDFLAGS) -L/usr/local/lib -lpthread 
+LDFLAGS=$(TOP_LDFLAGS) -L/usr/local/lib -lpthread ../3rdparty/build/release/lib/libmuduo_net.a ../3rdparty/build/release/lib/libmuduo_base.a
 LIBNAME=mcx
 
 SRCS := $(wildcard *.cc) $(wildcard internal/*.cc)

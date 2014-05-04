@@ -15,7 +15,7 @@ CFLAGS= -g -c -fPIC \
 	   -I ../3rdparty/muduo \
 	   -MMD
 CPPFLAGS=$(CFLAGS) -Woverloaded-virtual -Wsign-promo -fno-gnu-keywords 
-LDFLAGS=-L/usr/local/lib ../src/libmcx.a ../3rdparty/build/debug/lib/libmuduo_net.a ../3rdparty/build/debug/lib/libmuduo_base.a -lpthread 
+LDFLAGS=-L/usr/local/lib ../src/libmcx.a ../3rdparty/build/release/lib/libmuduo_net.a ../3rdparty/build/release/lib/libmuduo_base.a -lpthread 
 
 
 
