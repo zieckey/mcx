@@ -24,6 +24,8 @@ OBJS := $(patsubst %.cc, .obj/%.o, $(SRCS))
 DEPS := $(patsubst %.o, %.d, $(OBJS))
 PROGRAM := $(patsubst .obj/%.o, %, $(OBJS))
 
+MEMCACHED_PORT=38765
+
 all: prepare $(OBJS) $(PROGRAM)
 
 % : .obj/%.o ../src/libmcx.a
@@ -37,6 +39,11 @@ all: prepare $(OBJS) $(PROGRAM)
 prepare : 
 	$(MAKE) -C ../src
 	@mkdir -p .obj
+
+check : $(PROGRAM)
+	sh memcached-ctl.sh start $(MEMCACHED_PORT)
+	./mcxt $(MEMCACHED_PORT)
+	sh memcached-ctl.sh stop
 
 clean:
 	rm -rf *.o *.d $(OBJS) $(DEPS) $(PROGRAM)

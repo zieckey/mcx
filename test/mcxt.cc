@@ -88,11 +88,16 @@ void request(Memcached* m)
 
 int main(int argc, char* argv[])
 {
+    //usage : mcxt <memcached-port>
+    int port = 38765;
+    if (argc == 2) {
+        port = atoi(argv[1]);
+    }
     EventLoop loop;
     g_loop = &loop;
     loop.runAfter(7.0, boost::bind(&EventLoop::quit, &loop));
 
-    Memcached m("10.16.29.21", 11211);
+    Memcached m("127.0.0.1", port);
     m.initialize(&loop);
     m.setTimeout(100);
 
