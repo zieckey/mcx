@@ -14,9 +14,9 @@ test/mcxt.o
 test/multithread
 test/multithread.d
 test/multithread.o
-../3rdparty/muduo-1.0.1.tar.gz
-../3rdparty/muduo-1.0.1/
-../3rdparty/muduo.git-master/
+3rdparty/muduo-1.0.1.tar.gz
+3rdparty/muduo-1.0.1/
+3rdparty/muduo.git-master/
 memcached.pid
 *.bak
 *.d
