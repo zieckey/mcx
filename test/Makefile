@@ -42,7 +42,7 @@ prepare :
 
 check : $(PROGRAM)
 	sh memcached-ctl.sh start $(MEMCACHED_PORT)
-	./mcxt $(MEMCACHED_PORT)
+	./unittest_mcx_main $(MEMCACHED_PORT)
 	sh memcached-ctl.sh stop
 
 clean:

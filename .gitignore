@@ -21,3 +21,5 @@ memcached.pid
 *.bak
 *.d
 *.o
+test/multithread_benchmark
+test/unittest_mcx_main
